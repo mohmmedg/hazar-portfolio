@@ -1,0 +1,106 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-serif: "Playfair Display", Georgia, serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  
+  --color-gold: #C9A84C;
+  --color-navy-dark: #050818;
+  --color-navy-light: #0D1B3E;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    background-color: var(--color-navy-dark);
+    color: #ffffff;
+    font-family: var(--font-sans);
+    overflow-x: hidden;
+  }
+  
+  /* Hide standard cursor for luxury pointer experience on desktop */
+  @media (min-width: 1024px) {
+    body, a, button, select, input, textarea {
+      cursor: none !important;
+    }
+  }
+
+  /* Custom high-end scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #050818;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(201, 168, 76, 0.2);
+    border-radius: 4px;
+    border: 2px solid #050818;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(201, 168, 76, 0.5);
+  }
+}
+
+/* Glassmorphism custom classes */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.47);
+}
+
+.glass-panel-m {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.55);
+}
+
+.glass-panel-strong {
+  background: rgba(11, 15, 46, 0.7);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 16px 48px 0 rgba(0, 0, 0, 0.65);
+}
+
+/* Luxury visual glows */
+.gold-glow {
+  box-shadow: 0 0 25px rgba(201, 168, 76, 0.15);
+}
+
+.gold-glow-hover:hover {
+  box-shadow: 0 0 35px rgba(201, 168, 76, 0.35);
+  border-color: rgba(201, 168, 76, 0.4);
+}
+
+/* Subtle overlay animations */
+@keyframes pulseGlow {
+  0%, 100% {
+    opacity: 0.2;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.35;
+    transform: scale(1.05);
+  }
+}
+
+.ambient-bg-glow {
+  mix-blend-mode: plus-lighter;
+  animation: pulseGlow 10s ease-in-out infinite;
+}
+
+/* Custom Textures */
+.gold-text-gradient {
+  background: linear-gradient(135deg, #FFF9E6 0%, #C9A84C 50%, #8A6D25 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+

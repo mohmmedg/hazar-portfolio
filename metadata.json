@@ -1,0 +1,6 @@
+{
+  "name": "Hazar AlGhanem Portfolio",
+  "description": "Luxury Interior and Exterior Design Studio Portfolio based in Aleppo, Syria.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
