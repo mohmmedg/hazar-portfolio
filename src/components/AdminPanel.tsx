@@ -7,10 +7,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { LogOut, ExternalLink, Grid } from 'lucide-react';
 import { Tag, ProjectTag, ContactSettings, SiteContent, ServiceCMS, TestimonialCMS } from '../types';
 import Logo from './Logo';
+import useAuth from '../hooks/useAuth';
+import { saveProject, saveTags, saveProjectTags, saveContactSettings, saveSiteContent, saveServices, saveTestimonials } from '../lib/db';
 
 // Import newly refactored sub-components
 import AdminToast from './admin/AdminToast';
-import AdminLogin from './admin/AdminLogin';
 import AdminSidebar from './admin/AdminSidebar';
 import AdminDashboard from './admin/AdminDashboard';
 import AdminProjectForm from './admin/AdminProjectForm';
@@ -55,15 +56,6 @@ interface AdminPanelProps {
   setTestimonials: (testimonials: TestimonialCMS[]) => void;
 }
 
-// SHA-256 computation routine for secure logins
-async function sha256(message: string): Promise<string> {
-  const msgBuffer = new TextEncoder().encode(message);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-  return hashHex;
-}
-
 export default function AdminPanel({ 
   onBackToSite, 
   lang,
@@ -82,12 +74,7 @@ export default function AdminPanel({
   testimonials,
   setTestimonials
 }: AdminPanelProps) {
-  // Authentication states
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [loginError, setLoginError] = useState('');
-  const [shakeLogin, setShakeLogin] = useState(false);
+  const { logout } = useAuth();
 
   // Layout & Navigation states
   const [activeTab, setActiveTab] = useState<'dashboard' | 'add_project' | 'manage_projects' | 'tags' | 'contact_settings' | 'site_content'>('dashboard');
@@ -159,21 +146,84 @@ export default function AdminPanel({
   // Reference for file upload
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Check auth on mount
-  useEffect(() => {
-    const hasLocalAuth = localStorage.getItem('hazar_admin_authenticated') === 'true';
-    const hasSessionAuth = sessionStorage.getItem('hazar_admin_session_active') === 'true';
-    if (hasLocalAuth && hasSessionAuth) {
-      setIsAuthenticated(true);
-    }
-  }, []);
-
   // Sync editing content on change of source datasets
   useEffect(() => {
     if (siteContent && siteContent.length > 0) {
       setEditingContent(JSON.parse(JSON.stringify(siteContent)));
     }
   }, [siteContent, activeTab]);
+
+  // Auto-save projects to Supabase/localStorage
+  useEffect(() => {
+    if (projects && projects.length > 0) {
+      projects.forEach(proj => {
+        saveProject(proj).catch(err => {
+          console.error('Failed to save project:', err);
+          triggerToast('error', 'Failed to save project. Check your connection.');
+        });
+      });
+    }
+  }, [projects]);
+
+  // Auto-save tags to Supabase/localStorage
+  useEffect(() => {
+    if (tags && tags.length > 0) {
+      saveTags(tags).catch(err => {
+        console.error('Failed to save tags:', err);
+        triggerToast('error', 'Failed to save tags. Check your connection.');
+      });
+    }
+  }, [tags]);
+
+  // Auto-save project tags to Supabase/localStorage
+  useEffect(() => {
+    if (projectTags && projectTags.length > 0) {
+      saveProjectTags(projectTags).catch(err => {
+        console.error('Failed to save project tags:', err);
+        triggerToast('error', 'Failed to save project tags. Check your connection.');
+      });
+    }
+  }, [projectTags]);
+
+  // Auto-save site content
+  useEffect(() => {
+    if (siteContent && siteContent.length > 0) {
+      saveSiteContent(siteContent).catch(err => {
+        console.error('Failed to save site content:', err);
+        triggerToast('error', 'Failed to save site content. Check your connection.');
+      });
+    }
+  }, [siteContent]);
+
+  // Auto-save contact settings
+  useEffect(() => {
+    if (contactSettings && Object.keys(contactSettings).length > 0) {
+      saveContactSettings(contactSettings).catch(err => {
+        console.error('Failed to save contact settings:', err);
+        triggerToast('error', 'Failed to save contact settings. Check your connection.');
+      });
+    }
+  }, [contactSettings]);
+
+  // Auto-save services
+  useEffect(() => {
+    if (services && services.length > 0) {
+      saveServices(services).catch(err => {
+        console.error('Failed to save services:', err);
+        triggerToast('error', 'Failed to save services. Check your connection.');
+      });
+    }
+  }, [services]);
+
+  // Auto-save testimonials
+  useEffect(() => {
+    if (testimonials && testimonials.length > 0) {
+      saveTestimonials(testimonials).catch(err => {
+        console.error('Failed to save testimonials:', err);
+        triggerToast('error', 'Failed to save testimonials. Check your connection.');
+      });
+    }
+  }, [testimonials]);
 
   // Sync Contact Form on settings loaded
   useEffect(() => {
@@ -201,31 +251,13 @@ export default function AdminPanel({
     }, 3500);
   };
 
-  // Login handler with hash check
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const inputHash = await sha256(password);
-    const targetHash = '7bbe88830cb17d78869fea779346e40debec5be1b234245bb3b3adcbd403b6ec';
-    
-    if (inputHash === targetHash) {
-      localStorage.setItem('hazar_admin_authenticated', 'true');
-      sessionStorage.setItem('hazar_admin_session_active', 'true');
-      setLoginError('');
-      setIsAuthenticated(true);
-      triggerToast('success', 'Logged in successfully ✓');
-    } else {
-      setLoginError('Invalid Administrator Password');
-      setShakeLogin(true);
-      setTimeout(() => setShakeLogin(false), 500);
-    }
-  };
-
   // Logout handler
-  const handleLogout = () => {
-    localStorage.removeItem('hazar_admin_authenticated');
-    sessionStorage.removeItem('hazar_admin_session_active');
-    setIsAuthenticated(false);
-    setPassword('');
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (e) {
+      // ignore errors while logging out
+    }
     triggerToast('success', 'Logged out successfully');
   };
 
@@ -445,6 +477,9 @@ export default function AdminPanel({
     // Validate up to 10 images limit
     if (formImages.length + fileList.length > 10) {
       triggerToast('error', 'Maximum limit of 10 images per project exceeded');
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
       return;
     }
 
@@ -453,8 +488,15 @@ export default function AdminPanel({
     const base64Promises: Promise<string>[] = [];
 
     for (const file of fileList) {
+      // Validate file type
       if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
-        triggerToast('error', `${file.name} has unsupported format. Choose JPG, PNG, or WEBP`);
+        triggerToast('error', `${file.name} has unsupported format. Choose JPG, PNG, or WEBP only.`);
+        continue;
+      }
+
+      // Validate file size (max 5MB per image)
+      if (file.size > 5 * 1024 * 1024) {
+        triggerToast('error', `${file.name} exceeds maximum size of 5MB.`);
         continue;
       }
 
@@ -469,11 +511,16 @@ export default function AdminPanel({
 
     try {
       const results = await Promise.all(base64Promises);
+      if (results.length === 0) {
+        triggerToast('error', 'No valid images were selected. Check file formats and sizes.');
+        setIsProcessingImages(false);
+        return;
+      }
       setFormImages(prev => [...prev, ...results]);
       triggerToast('success', `${results.length} image(s) processed successfully`);
     } catch (err) {
       console.error(err);
-      triggerToast('error', 'Error in processing image data');
+      triggerToast('error', 'Error in processing image data. Please try again.');
     } finally {
       setIsProcessingImages(false);
       if (fileInputRef.current) {
@@ -495,6 +542,9 @@ export default function AdminPanel({
     setFormFeatured(false);
     setSelectedTagIds([]);
     setFormErrors({});
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   // Submit Handler for Add / Edit project form
@@ -679,17 +729,48 @@ export default function AdminPanel({
   // CONTACT SETTINGS CONTROLS
   const handleContactSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const phoneRegex = /^[\d\+\-\(\)\s]+$/;
+
+    const errors: string[] = [];
+    
+    if (!contactWhatsapp.trim()) errors.push('WhatsApp number is required');
+    if (!contactInstagram.trim()) errors.push('Instagram URL is required');
+    if (!contactEmail.trim()) {
+      errors.push('Email is required');
+    } else if (!emailRegex.test(contactEmail)) {
+      errors.push('Please enter a valid email address');
+    }
+    if (!contactPhone.trim()) {
+      errors.push('Phone number is required');
+    } else if (!phoneRegex.test(contactPhone)) {
+      errors.push('Please enter a valid phone number');
+    }
+    if (!contactLocation.trim()) errors.push('Location (English) is required');
+    if (!contactLocationAr.trim()) errors.push('Location (Arabic) is required');
+    if (!contactTagline.trim()) errors.push('Tagline (English) is required');
+    if (!contactTaglineAr.trim()) errors.push('Tagline (Arabic) is required');
+    if (!contactStudioDesc.trim()) errors.push('Studio description (English) is required');
+    if (!contactStudioDescAr.trim()) errors.push('Studio description (Arabic) is required');
+
+    if (errors.length > 0) {
+      triggerToast('error', errors[0]);
+      return;
+    }
+
     const updated: ContactSettings = {
-      whatsapp_number: contactWhatsapp,
-      instagram_url: contactInstagram,
-      email: contactEmail,
-      phone: contactPhone,
-      location: contactLocation,
-      location_ar: contactLocationAr,
-      tagline: contactTagline,
-      tagline_ar: contactTaglineAr,
-      studio_description: contactStudioDesc,
-      studio_description_ar: contactStudioDescAr
+      whatsapp_number: contactWhatsapp.trim(),
+      instagram_url: contactInstagram.trim(),
+      email: contactEmail.trim(),
+      phone: contactPhone.trim(),
+      location: contactLocation.trim(),
+      location_ar: contactLocationAr.trim(),
+      tagline: contactTagline.trim(),
+      tagline_ar: contactTaglineAr.trim(),
+      studio_description: contactStudioDesc.trim(),
+      studio_description_ar: contactStudioDescAr.trim()
     };
     setContactSettings(updated);
     triggerToast('success', 'Contact Settings configuration saved ✓');
@@ -710,25 +791,6 @@ export default function AdminPanel({
     acc[curr.category] = (acc[curr.category] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
-
-  // Unauthenticated Glass Login View
-  if (!isAuthenticated) {
-    return (
-      <>
-        <AdminLogin
-          password={password}
-          setPassword={setPassword}
-          showPassword={showPassword}
-          setShowPassword={setShowPassword}
-          loginError={loginError}
-          shakeLogin={shakeLogin}
-          handleLogin={handleLogin}
-          onBackToSite={onBackToSite}
-        />
-        <AdminToast toasts={toasts} />
-      </>
-    );
-  }
 
   return (
     <div className="min-h-screen relative bg-navy-dark flex flex-col font-sans selection:bg-gold/30 selection:text-white">

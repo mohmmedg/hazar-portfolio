@@ -15,6 +15,15 @@ import {
 } from 'lucide-react';
 import { Translation, ContactSettings, SiteContent, getContent } from '../types';
 
+const sanitize = (str: string): string => {
+  return str
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+    .replace(/\//g, '&#x2F;');
+};
+
 interface ContactProps {
   t: Translation;
   lang: 'en' | 'ar';
@@ -56,7 +65,10 @@ export default function Contact({ t, lang, settings, siteContent }: ContactProps
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !contactInfo.trim() || !message.trim()) return;
+    const sanitizedName = sanitize(name.trim());
+    const sanitizedContactInfo = sanitize(contactInfo.trim());
+    const sanitizedMessage = sanitize(message.trim());
+    if (!sanitizedName || !sanitizedContactInfo || !sanitizedMessage) return;
 
     setIsSubmitting(true);
 

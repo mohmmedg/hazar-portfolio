@@ -4,26 +4,29 @@ import { Lock, Eye, EyeOff, AlertCircle, ExternalLink } from 'lucide-react';
 import Logo from '../Logo';
 
 interface AdminLoginProps {
-  password: string;
-  setPassword: (val: string) => void;
-  showPassword: boolean;
-  setShowPassword: (val: boolean) => void;
-  shakeLogin: boolean;
-  loginError: string;
-  handleLogin: (e: React.FormEvent) => void;
+  onLogin: (email: string, password: string) => Promise<void>;
   onBackToSite: () => void;
 }
 
-export default function AdminLogin({
-  password,
-  setPassword,
-  showPassword,
-  setShowPassword,
-  shakeLogin,
-  loginError,
-  handleLogin,
-  onBackToSite
-}: AdminLoginProps) {
+export default function AdminLogin({ onLogin, onBackToSite }: AdminLoginProps) {
+  const [email, setEmail] = React.useState('');
+  const [password, setPassword] = React.useState('');
+  const [showPassword, setShowPassword] = React.useState(false);
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+    try {
+      await onLogin(email.trim(), password);
+    } catch (err: any) {
+      setError(err?.message || 'Authentication failed');
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <div className="min-h-screen relative bg-navy-dark flex items-center justify-center p-6 selection:bg-gold/30 selection:text-white">
       <div className="absolute top-[15%] left-[10%] w-[50vw] h-[50vw] rounded-full bg-gold/3 opacity-30 blur-[130px] pointer-events-none" />
@@ -47,56 +50,52 @@ export default function AdminLogin({
           </p>
         </div>
 
-        <form onSubmit={handleLogin} className="space-y-6">
+        <form onSubmit={submit} className="space-y-6">
           <div className="space-y-2">
-            <label className="text-xs tracking-wider uppercase text-white/50 font-medium block">
-              Access Passcode
-            </label>
-            
-            <motion.div 
-              animate={shakeLogin ? { x: [-10, 10, -10, 10, -5, 5, 0] } : {}}
-              transition={{ duration: 0.4 }}
-              className="relative"
-            >
+            <label className="text-xs tracking-wider uppercase text-white/50 font-medium block">Email</label>
+            <motion.div className="relative">
               <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-gold">
                 <Lock className="w-4 h-4" />
               </div>
-              
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full py-3 pl-12 pr-12 rounded-none bg-white/5 text-sm text-white placeholder-white/20 border border-white/10 focus:border-gold outline-none"
+                placeholder="admin@example.com"
+              />
+            </motion.div>
+
+            <label className="text-xs tracking-wider uppercase text-white/50 font-medium block">Password</label>
+            <motion.div className="relative">
               <input
                 type={showPassword ? 'text' : 'password'}
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full py-4 pl-12 pr-12 rounded-none bg-white/5 text-sm text-white placeholder-white/20 border border-white/10 hover:border-white/20 focus:border-gold outline-none transition-all duration-300 font-sans tracking-widest"
-                placeholder="••••••••••••"
+                className="w-full py-3 pl-3 pr-12 rounded-none bg-white/5 text-sm text-white placeholder-white/20 border border-white/10 focus:border-gold outline-none"
+                placeholder="Choose a secure password"
               />
-
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-4 flex items-center text-white/40 hover:text-gold transition-colors duration-300 pointer-events-auto"
+                className="absolute inset-y-0 right-4 flex items-center text-white/40 hover:text-gold transition-colors duration-300"
               >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </motion.div>
 
-            {loginError && (
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-xs text-red-400 mt-1 flex items-center gap-1.5"
-              >
+            {error && (
+              <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-xs text-red-400 mt-1 flex items-center gap-1.5">
                 <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                <span>{loginError}</span>
+                <span>{error}</span>
               </motion.p>
             )}
           </div>
 
-          <button
-            type="submit"
-            className="w-full relative py-4 bg-gradient-to-r from-gold to-[#8A6D25] text-navy-dark font-sans text-xs md:text-sm font-extrabold uppercase tracking-[0.2em] transition-all duration-300 hover:shadow-[0_0_25px_rgba(201,168,76,0.5)] hover:scale-[1.01] active:scale-[0.99]"
-          >
-            Authenticate Portal
+          <button type="submit" disabled={loading} className="w-full relative py-4 bg-gradient-to-r from-gold to-[#8A6D25] text-navy-dark font-sans text-xs md:text-sm font-extrabold uppercase tracking-[0.2em] transition-all duration-300 hover:shadow-[0_0_25px_rgba(201,168,76,0.5)]">
+            {loading ? 'Signing in…' : 'Sign in'}
           </button>
         </form>
 

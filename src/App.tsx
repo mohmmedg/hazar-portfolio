@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { TRANSLATIONS, PORTFOLIO_DATA, Tag, ProjectTag, ContactSettings, SiteContent, ServiceCMS, TestimonialCMS } from './types';
 import {
@@ -12,9 +13,13 @@ import {
   fetchContactSettings,
   fetchServices,
   fetchTestimonials,
+  fetchTags,
+  fetchProjectTags,
   saveProject,
-  saveSiteContent,
+  saveTags,
+  saveProjectTags,
   saveContactSettings,
+  saveSiteContent,
   saveServices,
   saveTestimonials
 } from './lib/db';
@@ -31,6 +36,8 @@ import Testimonials from './components/Testimonials';
 import Contact from './components/Contact';
 import Footer from './components/Footer';
 import AdminPanel from './components/AdminPanel';
+import AdminLoginPage from './components/AdminLoginPage';
+import AdminRoute from './routes/AdminRoute';
 
 const DEFAULT_SITE_CONTENT: SiteContent[] = [
   // HERO SECTION
@@ -151,10 +158,10 @@ const DEFAULT_TESTIMONIALS: TestimonialCMS[] = [
 ];
 
 const DEFAULT_CONTACT_SETTINGS: ContactSettings = {
-  whatsapp_number: '+963955111222',
-  instagram_url: 'https://instagram.com/hazar.alghanem',
-  email: 'hazar@example.com', // TODO: replace with real email
-  phone: '+963955111222',
+  whatsapp_number: import.meta.env.VITE_CONTACT_WHATSAPP || '',
+  instagram_url: import.meta.env.VITE_CONTACT_INSTAGRAM || '',
+  email: import.meta.env.VITE_CONTACT_EMAIL || '',
+  phone: import.meta.env.VITE_CONTACT_PHONE || '',
   location: 'Aleppo, Syria',
   location_ar: 'حلب، سوريا',
   tagline: 'Transforming ideas into luxurious realities ✦',
@@ -167,7 +174,7 @@ const DEFAULT_CONTACT_SETTINGS: ContactSettings = {
 export default function App() {
   const [lang, setLang] = useState<'en' | 'ar'>('en');
   const t = TRANSLATIONS[lang];
-  const [currentPath, setCurrentPath] = useState(window.location.pathname);
+  const navigate = useNavigate();
 
   // Unified global storage states
   const [projects, setProjects] = useState<any[]>([]);
@@ -312,14 +319,18 @@ export default function App() {
     // ── SUPABASE BACKGROUND REVALIDATE ──
     async function loadAllData() {
       try {
-        const [projectsData, contentData, settingsData, servicesData, testimonialsData] = await Promise.all([
+        const [projectsData, tagsData, projectTagsData, contentData, settingsData, servicesData, testimonialsData] = await Promise.all([
           fetchProjects(),
+          fetchTags(),
+          fetchProjectTags(),
           fetchSiteContent(),
           fetchContactSettings(),
           fetchServices(),
           fetchTestimonials()
         ]);
         if (projectsData && projectsData.length > 0) setProjects(projectsData);
+        if (tagsData && tagsData.length > 0) setTags(tagsData);
+        if (projectTagsData && projectTagsData.length > 0) setProjectTags(projectTagsData);
         if (contentData && contentData.length > 0) setSiteContent(contentData);
         if (settingsData && Object.keys(settingsData).length > 0) setContactSettings(settingsData);
         if (servicesData && servicesData.length > 0) setServices(servicesData);
@@ -399,68 +410,38 @@ export default function App() {
   }, []);
 
   // Monitor URL changes for real-time SPA navigation
-  useEffect(() => {
-    const handleLocationChange = () => {
-      setCurrentPath(window.location.pathname);
-    };
-    window.addEventListener('popstate', handleLocationChange);
-    
-    // Quick polling safeguard to catch direct address-bar transitions
-    const interval = setInterval(() => {
-      if (window.location.pathname !== currentPath) {
-        setCurrentPath(window.location.pathname);
-      }
-    }, 250);
-
-    return () => {
-      window.removeEventListener('popstate', handleLocationChange);
-      clearInterval(interval);
-    };
-  }, [currentPath]);
-
-  const navigateTo = (path: string) => {
-    window.history.pushState({}, '', path);
-    setCurrentPath(path);
-  };
-
   // Dynamically update document layout properties based on chosen language
   useEffect(() => {
     document.documentElement.lang = lang;
     document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
   }, [lang]);
 
-  const isAdminView = currentPath === '/admin' || currentPath === '/dashboard';
+  const adminPanelElement = (
+    <div className="min-h-screen relative bg-navy-dark">
+      <CustomCursor />
+      <AdminPanel 
+        lang={lang} 
+        onBackToSite={() => navigate('/')} 
+        projects={projects}
+        setProjects={handleUpdateProjects}
+        tags={tags}
+        setTags={handleUpdateTags}
+        projectTags={projectTags}
+        setProjectTags={handleUpdateProjectTags}
+        contactSettings={contactSettings}
+        setContactSettings={handleUpdateContactSettings}
+        siteContent={siteContent}
+        setSiteContent={handleUpdateSiteContent}
+        services={services}
+        setServices={handleUpdateServices}
+        testimonials={testimonials}
+        setTestimonials={handleUpdateTestimonials}
+      />
+    </div>
+  );
 
-  // If visiting admin panel, render the self-contained Admin Workspace with custom cursor
-  if (isAdminView) {
-    return (
-      <div className="min-h-screen relative bg-navy-dark">
-        <CustomCursor />
-        <AdminPanel 
-          lang={lang} 
-          onBackToSite={() => navigateTo('/')} 
-          projects={projects}
-          setProjects={handleUpdateProjects}
-          tags={tags}
-          setTags={handleUpdateTags}
-          projectTags={projectTags}
-          setProjectTags={handleUpdateProjectTags}
-          contactSettings={contactSettings}
-          setContactSettings={handleUpdateContactSettings}
-          siteContent={siteContent}
-          setSiteContent={handleUpdateSiteContent}
-          services={services}
-          setServices={handleUpdateServices}
-          testimonials={testimonials}
-          setTestimonials={handleUpdateTestimonials}
-        />
-      </div>
-    );
-  }
-
-  return (
+  const publicSiteElement = (
     <div className={`min-h-screen relative selection:bg-gold/30 selection:text-white bg-navy-dark`}>
-      
       {/* Absolute Aesthetic Background Gradients */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
         {/* Soft floating luxury glow backdrop */}
@@ -500,7 +481,15 @@ export default function App() {
         {/* [7] Minimal Copyright Signature (Footer) */}
         <Footer t={t} lang={lang} settings={contactSettings} siteContent={siteContent} />
       </div>
-
     </div>
+  );
+
+  return (
+    <Routes>
+      <Route path="/" element={publicSiteElement} />
+      <Route path="/admin/login" element={<AdminLoginPage />} />
+      <Route path="/admin" element={<AdminRoute>{adminPanelElement}</AdminRoute>} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 }

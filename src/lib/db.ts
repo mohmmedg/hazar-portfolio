@@ -233,3 +233,61 @@ export async function uploadImage(
     .getPublicUrl(path);
   return data.publicUrl;
 }
+
+// ── TAGS ──────────────────────────────────────────
+export async function fetchTags() {
+  if (!isSupabaseEnabled) {
+    const raw = localStorage.getItem('hazar_tags');
+    return raw ? JSON.parse(raw) : [];
+  }
+  const { data, error } = await supabase!
+    .from('tags')
+    .select('*')
+    .order('created_at', { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+
+export async function saveTags(tags: any[]) {
+  if (!isSupabaseEnabled) {
+    localStorage.setItem('hazar_tags', JSON.stringify(tags));
+    return;
+  }
+  const { error } = await supabase!
+    .from('tags')
+    .upsert(tags);
+  if (error) throw error;
+}
+
+// ── PROJECT TAGS ──────────────────────────────────
+export async function fetchProjectTags() {
+  if (!isSupabaseEnabled) {
+    const raw = localStorage.getItem('hazar_project_tags');
+    return raw ? JSON.parse(raw) : [];
+  }
+  const { data, error } = await supabase!
+    .from('project_tags')
+    .select('*');
+  if (error) throw error;
+  return data || [];
+}
+
+export async function saveProjectTags(projectTags: any[]) {
+  if (!isSupabaseEnabled) {
+    localStorage.setItem('hazar_project_tags', JSON.stringify(projectTags));
+    return;
+  }
+  
+  // Clear existing data first
+  await supabase!
+    .from('project_tags')
+    .delete()
+    .neq('project_id', '');
+    
+  if (projectTags.length > 0) {
+    const { error } = await supabase!
+      .from('project_tags')
+      .insert(projectTags);
+    if (error) throw error;
+  }
+}

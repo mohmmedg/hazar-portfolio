@@ -132,7 +132,7 @@ export default function AdminDashboard({
           </h3>
 
           <div className="space-y-4">
-            {['Living Room', 'Dining Room', 'Bedroom', 'Kitchen', 'Entrance', 'Exterior'].map(cat => {
+            {['Living Room', 'Dining Room', 'Bedroom', 'Kitchen', 'Entrance'].map(cat => {
               const count = categoryBreakdown[cat] || 0;
               const percentage = totalProjectsCount > 0 ? (count / totalProjectsCount) * 100 : 0;
               return (
