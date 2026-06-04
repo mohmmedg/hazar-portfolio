@@ -8,7 +8,7 @@ import { LogOut, ExternalLink, Grid } from 'lucide-react';
 import { Tag, ProjectTag, ContactSettings, SiteContent, ServiceCMS, TestimonialCMS } from '../types';
 import Logo from './Logo';
 import useAuth from '../hooks/useAuth';
-import { saveProject, saveTags, saveProjectTags, saveContactSettings, saveSiteContent, saveServices, saveTestimonials } from '../lib/db';
+import { saveProject, saveTags, saveProjectTags, saveContactSettings, saveSiteContent, saveServices, saveTestimonials, deleteProject } from '../lib/db';
 
 // Import newly refactored sub-components
 import AdminToast from './admin/AdminToast';
@@ -652,21 +652,21 @@ export default function AdminPanel({
     setProjectToDelete(project);
   };
 
-  // Confirm delete handler (Delayed actual state update to allow transition animation)
-  const confirmDeleteProject = () => {
+const confirmDeleteProject = async () => {
     if (!projectToDelete) return;
     setDeletingProjectId(projectToDelete.id);
 
-    // Wait 300ms for row scale-down and fade completion
+    try {
+      await deleteProject(projectToDelete.id);
+    } catch (err) {
+      console.error('Delete error:', err);
+    }
+
     setTimeout(() => {
       const filtered = projects.filter(proj => proj.id !== projectToDelete.id);
-      
-      // Clean tags linked as well
       const filteredProjTags = projectTags.filter(pt => pt.project_id !== projectToDelete.id);
-      
       setProjects(filtered);
       setProjectTags(filteredProjTags);
-      
       triggerToast('success', 'Project removed successfully from records');
       setProjectToDelete(null);
       setDeletingProjectId(null);
