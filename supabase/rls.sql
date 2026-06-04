@@ -1,6 +1,6 @@
--- Supabase RLS and admin role policies
-
--- Enable RLS for managed tables.
+-- =========================
+-- ENABLE RLS
+-- =========================
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
 ALTER TABLE site_content ENABLE ROW LEVEL SECURITY;
@@ -8,62 +8,118 @@ ALTER TABLE services ENABLE ROW LEVEL SECURITY;
 ALTER TABLE testimonials ENABLE ROW LEVEL SECURITY;
 ALTER TABLE contact_settings ENABLE ROW LEVEL SECURITY;
 
--- A helper policy to identify admins using the profiles table.
-CREATE POLICY "Admins may read their profile" ON profiles
-  FOR SELECT
-  USING (auth.uid() = id);
+-- =========================
+-- PROFILES
+-- =========================
 
-CREATE POLICY "Admins may update their profile" ON profiles
-  FOR UPDATE
-  USING (auth.uid() = id);
+DROP POLICY IF EXISTS "Users can read their own profile" ON profiles;
+DROP POLICY IF EXISTS "Users can update their own profile" ON profiles;
+DROP POLICY IF EXISTS "Users can insert their own profile" ON profiles;
 
-CREATE POLICY "Admins may insert profiles" ON profiles
-  FOR INSERT
-  WITH CHECK (auth.uid() = id);
+CREATE POLICY "Users can read their own profile"
+ON profiles
+FOR SELECT
+USING (auth.uid() = id);
 
-CREATE POLICY "Admins may manage CMS content" ON projects
-  FOR ALL
-  USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'))
-  WITH CHECK (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));
+CREATE POLICY "Users can update their own profile"
+ON profiles
+FOR UPDATE
+USING (auth.uid() = id);
 
-CREATE POLICY "Public may read site content" ON site_content
-  FOR SELECT
-  USING (true);
+CREATE POLICY "Users can insert their own profile"
+ON profiles
+FOR INSERT
+WITH CHECK (auth.uid() = id);
 
-CREATE POLICY "Admins may manage site content" ON site_content
-  FOR INSERT, UPDATE, DELETE
-  USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'))
-  WITH CHECK (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));
+-- =========================
+-- ADMIN CHECK FUNCTION (IMPORTANT)
+-- =========================
 
-CREATE POLICY "Public may read services" ON services
-  FOR SELECT
-  USING (true);
+CREATE OR REPLACE FUNCTION is_admin()
+RETURNS BOOLEAN AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1 FROM profiles
+    WHERE id = auth.uid()
+    AND role = 'admin'
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE POLICY "Admins may manage services" ON services
-  FOR INSERT, UPDATE, DELETE
-  USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'))
-  WITH CHECK (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));
+-- =========================
+-- PROJECTS (ADMIN ONLY WRITE)
+-- =========================
 
-CREATE POLICY "Public may read testimonials" ON testimonials
-  FOR SELECT
-  USING (true);
+DROP POLICY IF EXISTS "Projects read" ON projects;
+DROP POLICY IF EXISTS "Projects admin write" ON projects;
 
-CREATE POLICY "Admins may manage testimonials" ON testimonials
-  FOR INSERT, UPDATE, DELETE
-  USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'))
-  WITH CHECK (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));
+CREATE POLICY "Projects public read"
+ON projects
+FOR SELECT
+USING (true);
 
-CREATE POLICY "Public may read contact settings" ON contact_settings
-  FOR SELECT
-  USING (true);
+CREATE POLICY "Projects admin write"
+ON projects
+FOR INSERT, UPDATE, DELETE
+USING (is_admin())
+WITH CHECK (is_admin());
 
-CREATE POLICY "Admins may manage contact settings" ON contact_settings
-  FOR INSERT, UPDATE, DELETE
-  USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'))
-  WITH CHECK (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));
+-- =========================
+-- SITE CONTENT
+-- =========================
 
--- OPTIONAL: Restrict auth signups to invited email domains if desired.
--- ALTER TABLE auth.users ENABLE ROW LEVEL SECURITY;
--- CREATE POLICY "Only verified invite email addresses may sign up" ON auth.users
---   FOR INSERT
---   WITH CHECK (email LIKE '%@yourdomain.com');
+CREATE POLICY "Site content public read"
+ON site_content
+FOR SELECT
+USING (true);
+
+CREATE POLICY "Site content admin write"
+ON site_content
+FOR ALL
+USING (is_admin())
+WITH CHECK (is_admin());
+
+-- =========================
+-- SERVICES
+-- =========================
+
+CREATE POLICY "Services public read"
+ON services
+FOR SELECT
+USING (true);
+
+CREATE POLICY "Services admin write"
+ON services
+FOR ALL
+USING (is_admin())
+WITH CHECK (is_admin());
+
+-- =========================
+-- TESTIMONIALS
+-- =========================
+
+CREATE POLICY "Testimonials public read"
+ON testimonials
+FOR SELECT
+USING (true);
+
+CREATE POLICY "Testimonials admin write"
+ON testimonials
+FOR ALL
+USING (is_admin())
+WITH CHECK (is_admin());
+
+-- =========================
+-- CONTACT SETTINGS
+-- =========================
+
+CREATE POLICY "Contact public read"
+ON contact_settings
+FOR SELECT
+USING (true);
+
+CREATE POLICY "Contact admin write"
+ON contact_settings
+FOR ALL
+USING (is_admin())
+WITH CHECK (is_admin());
