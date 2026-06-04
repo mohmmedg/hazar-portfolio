@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- الدائرة الخلفية باللون الكحلي الداكن المتطابق مع الشعار -->
+  <circle cx="50" cy="50" r="48" fill="#0B132B" />
+
+  <!-- حرف الـ H بتصميم مبسط وواضح للأحجام الصغيرة -->
+  <path d="M 38,30 L 38,70 M 62,30 L 62,70 M 38,50 L 62,50" 
+        stroke="#FFFFFF" stroke-width="6" stroke-linecap="square" />
+  
+  <!-- الحركة الانسيابية العربية (التموج وحرف الهاء) متقاطعة مع الحرف -->
+  <path d="M 28,52 Q 45,32 60,52 Q 72,57 78,48 Q 84,38 76,38 Q 68,40 68,48" 
+        fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+</svg>
