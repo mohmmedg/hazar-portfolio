@@ -8,7 +8,7 @@ import { LogOut, ExternalLink, Grid } from 'lucide-react';
 import { Tag, ProjectTag, ContactSettings, SiteContent, ServiceCMS, TestimonialCMS } from '../types';
 import Logo from './Logo';
 import useAuth from '../hooks/useAuth';
-import { saveProject, saveTags, saveProjectTags, saveContactSettings, saveSiteContent, saveServices, saveTestimonials, deleteProject } from '../lib/db';
+import { saveProject, saveTags, saveProjectTags, saveContactSettings, saveSiteContent, saveServices, saveTestimonials, deleteProject, deleteService, deleteTestimonial, deleteTag } from '../lib/db';
 
 // Import newly refactored sub-components
 import AdminToast from './admin/AdminToast';
@@ -26,9 +26,9 @@ export interface AdminProject {
   name: string;
   category: 'Living Room' | 'Dining Room' | 'Bedroom' | 'Kitchen' | 'Entrance' | 'Exterior';
   description: string;
-  images: string[]; // array of base64 strings
+  images: string[];
   featured: boolean;
-  dateAdded: string; // YYYY-MM-DD
+  dateAdded: string;
 }
 
 interface Toast {
@@ -76,16 +76,13 @@ export default function AdminPanel({
 }: AdminPanelProps) {
   const { logout } = useAuth();
 
-  // Layout & Navigation states
   const [activeTab, setActiveTab] = useState<'dashboard' | 'add_project' | 'manage_projects' | 'tags' | 'contact_settings' | 'site_content'>('dashboard');
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
-  // Site Content CMS tab states
   const [cmsSection, setCmsSection] = useState<'hero' | 'about' | 'services' | 'testimonials' | 'contact' | 'footer'>('hero');
   const [isPreviewEnabled, setIsPreviewEnabled] = useState(true);
   const [editingContent, setEditingContent] = useState<SiteContent[]>([]);
 
-  // Services CMS management states
   const [editingServiceId, setEditingServiceId] = useState<string | null>(null);
   const [srvTitleEn, setSrvTitleEn] = useState('');
   const [srvTitleAr, setSrvTitleAr] = useState('');
@@ -94,7 +91,6 @@ export default function AdminPanel({
   const [srvIcon, setSrvIcon] = useState('Compass');
   const [srvActive, setSrvActive] = useState(true);
 
-  // Testimonials CMS management states
   const [editingTestimonialId, setEditingTestimonialId] = useState<string | null>(null);
   const [tstClientEn, setTstClientEn] = useState('');
   const [tstClientAr, setTstClientAr] = useState('');
@@ -103,10 +99,8 @@ export default function AdminPanel({
   const [tstRating, setTstRating] = useState<number>(5);
   const [tstActive, setTstActive] = useState(true);
 
-  // Toast State
   const [toasts, setToasts] = useState<Toast[]>([]);
 
-  // Add/Edit Project Form States
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
   const [formName, setFormName] = useState('');
   const [formCategory, setFormCategory] = useState<'Living Room' | 'Dining Room' | 'Bedroom' | 'Kitchen' | 'Entrance' | 'Exterior'>('Living Room');
@@ -114,18 +108,14 @@ export default function AdminPanel({
   const [formDescription, setFormDescription] = useState('');
   const [formFeatured, setFormFeatured] = useState(false);
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
-  
-  // Validation inline errors
   const [formErrors, setFormErrors] = useState<{ name?: string; images?: string }>({});
   const [isProcessingImages, setIsProcessingImages] = useState(false);
 
-  // Tags Manager form states
   const [formTagName, setFormTagName] = useState('');
   const [formTagNameAr, setFormTagNameAr] = useState('');
   const [formTagColor, setFormTagColor] = useState('#C9A84C');
   const [editingTagId, setEditingTagId] = useState<string | null>(null);
 
-  // Contact Settings Form states
   const [contactWhatsapp, setContactWhatsapp] = useState('');
   const [contactInstagram, setContactInstagram] = useState('');
   const [contactEmail, setContactEmail] = useState('');
@@ -137,93 +127,19 @@ export default function AdminPanel({
   const [contactStudioDesc, setContactStudioDesc] = useState('');
   const [contactStudioDescAr, setContactStudioDescAr] = useState('');
 
-  // Manage Projects states (search, filter, delete confirmation + animation state)
   const [searchQuery, setSearchQuery] = useState('');
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const [projectToDelete, setProjectToDelete] = useState<AdminProject | null>(null);
   const [deletingProjectId, setDeletingProjectId] = useState<string | null>(null);
 
-  // Reference for file upload
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Sync editing content on change of source datasets
+  // Sync editing content on tab change
   useEffect(() => {
     if (siteContent && siteContent.length > 0) {
       setEditingContent(JSON.parse(JSON.stringify(siteContent)));
     }
   }, [siteContent, activeTab]);
-
-  // Auto-save projects to Supabase/localStorage
-  useEffect(() => {
-    if (projects && projects.length > 0) {
-      projects.forEach(proj => {
-        saveProject(proj).catch(err => {
-          console.error('Failed to save project:', err);
-          triggerToast('error', 'Failed to save project. Check your connection.');
-        });
-      });
-    }
-  }, [projects]);
-
-  // Auto-save tags to Supabase/localStorage
-  useEffect(() => {
-    if (tags && tags.length > 0) {
-      saveTags(tags).catch(err => {
-        console.error('Failed to save tags:', err);
-        triggerToast('error', 'Failed to save tags. Check your connection.');
-      });
-    }
-  }, [tags]);
-
-  // Auto-save project tags to Supabase/localStorage
-  useEffect(() => {
-    if (projectTags && projectTags.length > 0) {
-      saveProjectTags(projectTags).catch(err => {
-        console.error('Failed to save project tags:', err);
-        triggerToast('error', 'Failed to save project tags. Check your connection.');
-      });
-    }
-  }, [projectTags]);
-
-  // Auto-save site content
-  useEffect(() => {
-    if (siteContent && siteContent.length > 0) {
-      saveSiteContent(siteContent).catch(err => {
-        console.error('Failed to save site content:', err);
-        triggerToast('error', 'Failed to save site content. Check your connection.');
-      });
-    }
-  }, [siteContent]);
-
-  // Auto-save contact settings
-  useEffect(() => {
-    if (contactSettings && Object.keys(contactSettings).length > 0) {
-      saveContactSettings(contactSettings).catch(err => {
-        console.error('Failed to save contact settings:', err);
-        triggerToast('error', 'Failed to save contact settings. Check your connection.');
-      });
-    }
-  }, [contactSettings]);
-
-  // Auto-save services
-  useEffect(() => {
-    if (services && services.length > 0) {
-      saveServices(services).catch(err => {
-        console.error('Failed to save services:', err);
-        triggerToast('error', 'Failed to save services. Check your connection.');
-      });
-    }
-  }, [services]);
-
-  // Auto-save testimonials
-  useEffect(() => {
-    if (testimonials && testimonials.length > 0) {
-      saveTestimonials(testimonials).catch(err => {
-        console.error('Failed to save testimonials:', err);
-        triggerToast('error', 'Failed to save testimonials. Check your connection.');
-      });
-    }
-  }, [testimonials]);
 
   // Sync Contact Form on settings loaded
   useEffect(() => {
@@ -241,27 +157,22 @@ export default function AdminPanel({
     }
   }, [contactSettings]);
 
-  // Toast Notification triggers
   const triggerToast = (type: 'success' | 'error', message: string) => {
     const id = Date.now().toString();
-    const newToast = { id, type, message };
-    setToasts((prev) => [...prev, newToast]);
+    setToasts((prev) => [...prev, { id, type, message }]);
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
     }, 3500);
   };
 
-  // Logout handler
   const handleLogout = async () => {
     try {
       await logout();
-    } catch (e) {
-      // ignore errors while logging out
-    }
+    } catch (e) {}
     triggerToast('success', 'Logged out successfully');
   };
 
-  // --- SITE CONTENT (CMS) HELPER ROUTINES ---
+  // --- SITE CONTENT (CMS) ---
   const handleCmsImageUpload = (e: React.ChangeEvent<HTMLInputElement>, itemKey: string) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -300,9 +211,7 @@ export default function AdminPanel({
     let hasErrors = false;
     editingContent.forEach(item => {
       if (keysToValidate.includes(item.key)) {
-        if (!item.value_en?.trim() || !item.value_ar?.trim()) {
-          hasErrors = true;
-        }
+        if (!item.value_en?.trim() || !item.value_ar?.trim()) hasErrors = true;
       }
     });
 
@@ -312,10 +221,14 @@ export default function AdminPanel({
     }
 
     setSiteContent(editingContent);
+    saveSiteContent(editingContent).catch(err => {
+      console.error('Failed to save site content:', err);
+      triggerToast('error', 'Failed to save site content. Check your connection.');
+    });
     triggerToast('success', `Saved [${cmsSection.toUpperCase()}] content successfully ✓`);
   };
 
-  // --- SERVICES CMS CRUD ---
+  // --- SERVICES CRUD ---
   const handleEditServiceTrigger = (srv: ServiceCMS) => {
     setEditingServiceId(srv.id);
     setSrvTitleEn(srv.title_en);
@@ -328,12 +241,9 @@ export default function AdminPanel({
 
   const handleCancelServiceEdit = () => {
     setEditingServiceId(null);
-    setSrvTitleEn('');
-    setSrvTitleAr('');
-    setSrvDescEn('');
-    setSrvDescAr('');
-    setSrvIcon('Compass');
-    setSrvActive(true);
+    setSrvTitleEn(''); setSrvTitleAr('');
+    setSrvDescEn(''); setSrvDescAr('');
+    setSrvIcon('Compass'); setSrvActive(true);
   };
 
   const handleSaveService = (e: React.FormEvent) => {
@@ -343,39 +253,43 @@ export default function AdminPanel({
       return;
     }
 
+    let updated: ServiceCMS[];
     if (editingServiceId) {
-      const updated = services.map(s => s.id === editingServiceId ? {
-        ...s,
-        title_en: srvTitleEn,
-        title_ar: srvTitleAr,
-        description_en: srvDescEn,
-        description_ar: srvDescAr,
-        icon: srvIcon,
-        active: srvActive
+      updated = services.map(s => s.id === editingServiceId ? {
+        ...s, title_en: srvTitleEn, title_ar: srvTitleAr,
+        description_en: srvDescEn, description_ar: srvDescAr,
+        icon: srvIcon, active: srvActive
       } : s);
-      setServices(updated);
       triggerToast('success', 'Service modified successfully ✓');
       setEditingServiceId(null);
     } else {
       const newSrv: ServiceCMS = {
         id: 'srv_' + Date.now().toString(),
-        title_en: srvTitleEn,
-        title_ar: srvTitleAr,
-        description_en: srvDescEn,
-        description_ar: srvDescAr,
-        icon: srvIcon,
-        active: srvActive,
+        title_en: srvTitleEn, title_ar: srvTitleAr,
+        description_en: srvDescEn, description_ar: srvDescAr,
+        icon: srvIcon, active: srvActive,
         display_order: services.length + 1
       };
-      setServices([...services, newSrv]);
+      updated = [...services, newSrv];
       triggerToast('success', 'Added new service card ✓');
     }
+    setServices(updated);
+    saveServices(updated).catch(err => {
+      console.error('Failed to save services:', err);
+      triggerToast('error', 'Failed to save services. Check your connection.');
+    });
     handleCancelServiceEdit();
   };
 
-  const handleDeleteService = (id: string) => {
-    const updated = services.filter(s => s.id !== id);
-    setServices(updated);
+  const handleDeleteService = async (id: string) => {
+    try {
+      await deleteService(id);
+    } catch (err) {
+      console.error('Delete service error:', err);
+      triggerToast('error', 'Failed to delete service');
+      return;
+    }
+    setServices(services.filter(s => s.id !== id));
     triggerToast('success', 'Service deleted successfully');
   };
 
@@ -383,33 +297,26 @@ export default function AdminPanel({
     const targetIdx = direction === 'up' ? index - 1 : index + 1;
     if (targetIdx < 0 || targetIdx >= services.length) return;
     const list = [...services];
-    const temp = list[index];
-    list[index] = list[targetIdx];
-    list[targetIdx] = temp;
+    [list[index], list[targetIdx]] = [list[targetIdx], list[index]];
     const reordered = list.map((item, idx) => ({ ...item, display_order: idx + 1 }));
     setServices(reordered);
+    saveServices(reordered).catch(err => console.error('Failed to save services order:', err));
     triggerToast('success', 'Order updated');
   };
 
-  // --- TESTIMONIALS CMS CRUD ---
+  // --- TESTIMONIALS CRUD ---
   const handleEditTestimonialTrigger = (tst: TestimonialCMS) => {
     setEditingTestimonialId(tst.id);
-    setTstClientEn(tst.client_name_en);
-    setTstClientAr(tst.client_name_ar);
-    setTstTextEn(tst.text_en);
-    setTstTextAr(tst.text_ar);
-    setTstRating(tst.rating || 5);
-    setTstActive(tst.active);
+    setTstClientEn(tst.client_name_en); setTstClientAr(tst.client_name_ar);
+    setTstTextEn(tst.text_en); setTstTextAr(tst.text_ar);
+    setTstRating(tst.rating || 5); setTstActive(tst.active);
   };
 
   const handleCancelTestimonialEdit = () => {
     setEditingTestimonialId(null);
-    setTstClientEn('');
-    setTstClientAr('');
-    setTstTextEn('');
-    setTstTextAr('');
-    setTstRating(5);
-    setTstActive(true);
+    setTstClientEn(''); setTstClientAr('');
+    setTstTextEn(''); setTstTextAr('');
+    setTstRating(5); setTstActive(true);
   };
 
   const handleSaveTestimonial = (e: React.FormEvent) => {
@@ -419,39 +326,43 @@ export default function AdminPanel({
       return;
     }
 
+    let updated: TestimonialCMS[];
     if (editingTestimonialId) {
-      const updated = testimonials.map(t => t.id === editingTestimonialId ? {
-        ...t,
-        client_name_en: tstClientEn,
-        client_name_ar: tstClientAr,
-        text_en: tstTextEn,
-        text_ar: tstTextAr,
-        rating: tstRating,
-        active: tstActive
+      updated = testimonials.map(t => t.id === editingTestimonialId ? {
+        ...t, client_name_en: tstClientEn, client_name_ar: tstClientAr,
+        text_en: tstTextEn, text_ar: tstTextAr,
+        rating: tstRating, active: tstActive
       } : t);
-      setTestimonials(updated);
       triggerToast('success', 'Review modified successfully ✓');
       setEditingTestimonialId(null);
     } else {
       const newTst: TestimonialCMS = {
         id: 'tst_' + Date.now().toString(),
-        client_name_en: tstClientEn,
-        client_name_ar: tstClientAr,
-        text_en: tstTextEn,
-        text_ar: tstTextAr,
-        rating: tstRating,
-        active: tstActive,
+        client_name_en: tstClientEn, client_name_ar: tstClientAr,
+        text_en: tstTextEn, text_ar: tstTextAr,
+        rating: tstRating, active: tstActive,
         display_order: testimonials.length + 1
       };
-      setTestimonials([...testimonials, newTst]);
+      updated = [...testimonials, newTst];
       triggerToast('success', 'Added new testimonial citation ✓');
     }
+    setTestimonials(updated);
+    saveTestimonials(updated).catch(err => {
+      console.error('Failed to save testimonials:', err);
+      triggerToast('error', 'Failed to save testimonials. Check your connection.');
+    });
     handleCancelTestimonialEdit();
   };
 
-  const handleDeleteTestimonial = (id: string) => {
-    const updated = testimonials.filter(t => t.id !== id);
-    setTestimonials(updated);
+  const handleDeleteTestimonial = async (id: string) => {
+    try {
+      await deleteTestimonial(id);
+    } catch (err) {
+      console.error('Delete testimonial error:', err);
+      triggerToast('error', 'Failed to delete testimonial');
+      return;
+    }
+    setTestimonials(testimonials.filter(t => t.id !== id));
     triggerToast('success', 'Testimonial removed successfully');
   };
 
@@ -459,73 +370,55 @@ export default function AdminPanel({
     const targetIdx = direction === 'up' ? index - 1 : index + 1;
     if (targetIdx < 0 || targetIdx >= testimonials.length) return;
     const list = [...testimonials];
-    const temp = list[index];
-    list[index] = list[targetIdx];
-    list[targetIdx] = temp;
+    [list[index], list[targetIdx]] = [list[targetIdx], list[index]];
     const reordered = list.map((item, idx) => ({ ...item, display_order: idx + 1 }));
     setTestimonials(reordered);
+    saveTestimonials(reordered).catch(err => console.error('Failed to save testimonials order:', err));
     triggerToast('success', 'Order updated');
   };
 
-  // Image Processing Handler
+  // --- IMAGE UPLOAD ---
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
-
     const fileList = Array.from(files) as File[];
-    
-    // Validate up to 10 images limit
     if (formImages.length + fileList.length > 10) {
       triggerToast('error', 'Maximum limit of 10 images per project exceeded');
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
+      if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }
-
     setIsProcessingImages(true);
     setFormErrors(prev => ({ ...prev, images: undefined }));
     const base64Promises: Promise<string>[] = [];
-
     for (const file of fileList) {
-      // Validate file type
       if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
         triggerToast('error', `${file.name} has unsupported format. Choose JPG, PNG, or WEBP only.`);
         continue;
       }
-
-      // Validate file size (max 5MB per image)
       if (file.size > 5 * 1024 * 1024) {
         triggerToast('error', `${file.name} exceeds maximum size of 5MB.`);
         continue;
       }
-
-      const promise = new Promise<string>((resolve, reject) => {
+      base64Promises.push(new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
         reader.readAsDataURL(file);
         reader.onload = () => resolve(reader.result as string);
         reader.onerror = (err) => reject(err);
-      });
-      base64Promises.push(promise);
+      }));
     }
-
     try {
       const results = await Promise.all(base64Promises);
       if (results.length === 0) {
         triggerToast('error', 'No valid images were selected. Check file formats and sizes.');
-        setIsProcessingImages(false);
         return;
       }
       setFormImages(prev => [...prev, ...results]);
       triggerToast('success', `${results.length} image(s) processed successfully`);
     } catch (err) {
-      console.error(err);
       triggerToast('error', 'Error in processing image data. Please try again.');
     } finally {
       setIsProcessingImages(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
@@ -535,30 +428,19 @@ export default function AdminPanel({
 
   const resetForm = () => {
     setEditingProjectId(null);
-    setFormName('');
-    setFormCategory('Living Room');
-    setFormImages([]);
-    setFormDescription('');
-    setFormFeatured(false);
-    setSelectedTagIds([]);
+    setFormName(''); setFormCategory('Living Room');
+    setFormImages([]); setFormDescription('');
+    setFormFeatured(false); setSelectedTagIds([]);
     setFormErrors({});
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  // Submit Handler for Add / Edit project form
+  // --- PROJECT FORM SUBMIT ---
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
     const errors: { name?: string; images?: string } = {};
-    if (!formName.trim()) {
-      errors.name = 'Project Name is required';
-    }
-    if (formImages.length === 0) {
-      errors.images = 'At least one project image is required';
-    }
-
+    if (!formName.trim()) errors.name = 'Project Name is required';
+    if (formImages.length === 0) errors.images = 'At least one project image is required';
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
       triggerToast('error', 'Please fill in all required fields');
@@ -569,45 +451,40 @@ export default function AdminPanel({
     const targetProjId = editingProjectId || 'proj_' + Date.now().toString();
 
     if (editingProjectId) {
-      // Edit mode
-      const updated = projects.map(proj => {
-        if (proj.id === editingProjectId) {
-          return {
-            ...proj,
-            name: formName,
-            category: formCategory,
-            description: formDescription,
-            images: formImages,
-            featured: formFeatured
-          };
-        }
-        return proj;
-      });
+      const updated = projects.map(proj => proj.id === editingProjectId ? {
+        ...proj, name: formName, category: formCategory,
+        description: formDescription, images: formImages, featured: formFeatured
+      } : proj);
       setProjects(updated);
-
-      // Save Project Tags
+      updated.forEach(proj => {
+        if (proj.id === editingProjectId) {
+          saveProject(proj).catch(err => {
+            console.error('Failed to save project:', err);
+            triggerToast('error', 'Failed to save project. Check your connection.');
+          });
+        }
+      });
       const filteredProjTags = projectTags.filter(pt => pt.project_id !== editingProjectId);
       const newProjTags = selectedTagIds.map(tagId => ({ project_id: editingProjectId, tag_id: tagId }));
-      setProjectTags([...filteredProjTags, ...newProjTags]);
-
+      const updatedProjTags = [...filteredProjTags, ...newProjTags];
+      setProjectTags(updatedProjTags);
+      saveProjectTags(updatedProjTags).catch(err => console.error('Failed to save project tags:', err));
       triggerToast('success', 'Project updated successfully ✓');
     } else {
-      // Create mode
       const newProj: AdminProject = {
-        id: targetProjId,
-        name: formName,
-        category: formCategory,
-        description: formDescription,
-        images: formImages,
-        featured: formFeatured,
-        dateAdded: todayStr
+        id: targetProjId, name: formName, category: formCategory,
+        description: formDescription, images: formImages,
+        featured: formFeatured, dateAdded: todayStr
       };
       setProjects([newProj, ...projects]);
-
-      // Add Project Tags
+      saveProject(newProj).catch(err => {
+        console.error('Failed to save project:', err);
+        triggerToast('error', 'Failed to save project. Check your connection.');
+      });
       const newProjTags = selectedTagIds.map(tagId => ({ project_id: targetProjId, tag_id: tagId }));
-      setProjectTags([...projectTags, ...newProjTags]);
-
+      const updatedProjTags = [...projectTags, ...newProjTags];
+      setProjectTags(updatedProjTags);
+      saveProjectTags(updatedProjTags).catch(err => console.error('Failed to save project tags:', err));
       triggerToast('success', 'Project added successfully ✓');
     }
 
@@ -615,70 +492,57 @@ export default function AdminPanel({
     setActiveTab('manage_projects');
   };
 
-  // Toggle Featured directly from list
   const toggleProjectFeatured = (id: string) => {
     const updated = projects.map(proj => {
       if (proj.id === id) {
         const nextState = !proj.featured;
         triggerToast('success', `Project marked as ${nextState ? 'featured ✦' : 'standard'}`);
-        return { ...proj, featured: nextState };
+        const updatedProj = { ...proj, featured: nextState };
+        saveProject(updatedProj).catch(err => console.error('Failed to save project:', err));
+        return updatedProj;
       }
       return proj;
     });
     setProjects(updated);
   };
 
-  // Edit action trigger
   const handleEditTrigger = (project: AdminProject) => {
     setEditingProjectId(project.id);
-    setFormName(project.name);
-    setFormCategory(project.category);
-    setFormImages(project.images);
-    setFormDescription(project.description);
-    setFormFeatured(project.featured);
-    setFormErrors({});
-
-    // Filter project tags
-    const currentProjTags = projectTags
-      .filter(pt => pt.project_id === project.id)
-      .map(pt => pt.tag_id);
-    setSelectedTagIds(currentProjTags);
-
+    setFormName(project.name); setFormCategory(project.category);
+    setFormImages(project.images); setFormDescription(project.description);
+    setFormFeatured(project.featured); setFormErrors({});
+    setSelectedTagIds(projectTags.filter(pt => pt.project_id === project.id).map(pt => pt.tag_id));
     setActiveTab('add_project');
   };
 
-  // Delete Action confirmation trigger
   const handleDeleteTrigger = (project: AdminProject) => {
     setProjectToDelete(project);
   };
 
-const confirmDeleteProject = async () => {
+  const confirmDeleteProject = async () => {
     if (!projectToDelete) return;
     setDeletingProjectId(projectToDelete.id);
-
     try {
       await deleteProject(projectToDelete.id);
     } catch (err) {
       console.error('Delete error:', err);
+      triggerToast('error', 'Failed to delete project');
+      setDeletingProjectId(null);
+      return;
     }
-
     setTimeout(() => {
-      const filtered = projects.filter(proj => proj.id !== projectToDelete.id);
-      const filteredProjTags = projectTags.filter(pt => pt.project_id !== projectToDelete.id);
-      setProjects(filtered);
-      setProjectTags(filteredProjTags);
+      setProjects(projects.filter(proj => proj.id !== projectToDelete.id));
+      setProjectTags(projectTags.filter(pt => pt.project_id !== projectToDelete.id));
       triggerToast('success', 'Project removed successfully from records');
       setProjectToDelete(null);
       setDeletingProjectId(null);
     }, 300);
   };
 
-  // TAG MANAGER CONTROLS
+  // --- TAGS CRUD ---
   const resetTagForm = () => {
-    setFormTagName('');
-    setFormTagNameAr('');
-    setFormTagColor('#C9A84C');
-    setEditingTagId(null);
+    setFormTagName(''); setFormTagNameAr('');
+    setFormTagColor('#C9A84C'); setEditingTagId(null);
   };
 
   const handleTagSubmit = (e: React.FormEvent) => {
@@ -688,26 +552,26 @@ const confirmDeleteProject = async () => {
       return;
     }
 
+    let updated: Tag[];
     if (editingTagId) {
-      const updated = tags.map(t => {
-        if (t.id === editingTagId) {
-          return { ...t, name: formTagName.trim(), name_ar: formTagNameAr.trim(), color: formTagColor };
-        }
-        return t;
-      });
-      setTags(updated);
+      updated = tags.map(t => t.id === editingTagId
+        ? { ...t, name: formTagName.trim(), name_ar: formTagNameAr.trim(), color: formTagColor }
+        : t);
       triggerToast('success', 'Tag updated successfully ✓');
     } else {
       const newTag: Tag = {
         id: 't_' + Date.now().toString(),
-        name: formTagName.trim(),
-        name_ar: formTagNameAr.trim(),
-        color: formTagColor,
-        created_at: new Date().toISOString()
+        name: formTagName.trim(), name_ar: formTagNameAr.trim(),
+        color: formTagColor, created_at: new Date().toISOString()
       };
-      setTags([...tags, newTag]);
+      updated = [...tags, newTag];
       triggerToast('success', 'Tag created successfully ✦');
     }
+    setTags(updated);
+    saveTags(updated).catch(err => {
+      console.error('Failed to save tags:', err);
+      triggerToast('error', 'Failed to save tags. Check your connection.');
+    });
     resetTagForm();
   };
 
@@ -718,47 +582,38 @@ const confirmDeleteProject = async () => {
     setEditingTagId(tagItem.id);
   };
 
-  const handleTagDeleteCall = (tagItem: Tag) => {
-    const remainingTags = tags.filter(t => t.id !== tagItem.id);
-    const remainingProjTags = projectTags.filter(pt => pt.tag_id !== tagItem.id);
-    setTags(remainingTags);
-    setProjectTags(remainingProjTags);
+  const handleTagDeleteCall = async (tagItem: Tag) => {
+    try {
+      await deleteTag(tagItem.id);
+    } catch (err) {
+      console.error('Delete tag error:', err);
+      triggerToast('error', 'Failed to delete tag');
+      return;
+    }
+    setTags(tags.filter(t => t.id !== tagItem.id));
+    setProjectTags(projectTags.filter(pt => pt.tag_id !== tagItem.id));
     triggerToast('success', `Tag "${tagItem.name}" deleted from index`);
   };
 
-  // CONTACT SETTINGS CONTROLS
+  // --- CONTACT SETTINGS ---
   const handleContactSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const phoneRegex = /^[\d\+\-\(\)\s]+$/;
-
     const errors: string[] = [];
-    
     if (!contactWhatsapp.trim()) errors.push('WhatsApp number is required');
     if (!contactInstagram.trim()) errors.push('Instagram URL is required');
-    if (!contactEmail.trim()) {
-      errors.push('Email is required');
-    } else if (!emailRegex.test(contactEmail)) {
-      errors.push('Please enter a valid email address');
-    }
-    if (!contactPhone.trim()) {
-      errors.push('Phone number is required');
-    } else if (!phoneRegex.test(contactPhone)) {
-      errors.push('Please enter a valid phone number');
-    }
+    if (!contactEmail.trim()) errors.push('Email is required');
+    else if (!emailRegex.test(contactEmail)) errors.push('Please enter a valid email address');
+    if (!contactPhone.trim()) errors.push('Phone number is required');
+    else if (!phoneRegex.test(contactPhone)) errors.push('Please enter a valid phone number');
     if (!contactLocation.trim()) errors.push('Location (English) is required');
     if (!contactLocationAr.trim()) errors.push('Location (Arabic) is required');
     if (!contactTagline.trim()) errors.push('Tagline (English) is required');
     if (!contactTaglineAr.trim()) errors.push('Tagline (Arabic) is required');
     if (!contactStudioDesc.trim()) errors.push('Studio description (English) is required');
     if (!contactStudioDescAr.trim()) errors.push('Studio description (Arabic) is required');
-
-    if (errors.length > 0) {
-      triggerToast('error', errors[0]);
-      return;
-    }
+    if (errors.length > 0) { triggerToast('error', errors[0]); return; }
 
     const updated: ContactSettings = {
       whatsapp_number: contactWhatsapp.trim(),
@@ -773,20 +628,21 @@ const confirmDeleteProject = async () => {
       studio_description_ar: contactStudioDescAr.trim()
     };
     setContactSettings(updated);
+    saveContactSettings(updated).catch(err => {
+      console.error('Failed to save contact settings:', err);
+      triggerToast('error', 'Failed to save contact settings. Check your connection.');
+    });
     triggerToast('success', 'Contact Settings configuration saved ✓');
   };
 
-  // Filter & Search computation on saved projects
   const processedProjectsList = projects.filter(proj => {
-    const matchesSearch = proj.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    const matchesSearch = proj.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           proj.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = filterCategory === 'all' || proj.category === filterCategory;
     return matchesSearch && matchesCategory;
   });
 
-  // Math Statistics
   const totalProjectsCount = projects.length;
-  
   const categoryBreakdown = projects.reduce((acc, curr) => {
     acc[curr.category] = (acc[curr.category] || 0) + 1;
     return acc;
@@ -794,13 +650,11 @@ const confirmDeleteProject = async () => {
 
   return (
     <div className="min-h-screen relative bg-navy-dark flex flex-col font-sans selection:bg-gold/30 selection:text-white">
-      
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
         <div className="absolute top-[5%] right-[-10%] w-[55vw] h-[55vw] rounded-full bg-gold/2 opacity-30 blur-[130px]" />
         <div className="absolute bottom-[10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-navy-light/30 opacity-30 blur-[130px]" />
       </div>
 
-      {/* ADMIN NAV BAR */}
       <header className="sticky top-0 z-40 w-full glass-panel-m border-b border-white/10 px-6 py-4 md:px-12 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 flex items-center justify-center">
@@ -815,7 +669,6 @@ const confirmDeleteProject = async () => {
             </span>
           </div>
         </div>
-
         <div className="flex items-center gap-4">
           <button
             onClick={onBackToSite}
@@ -824,7 +677,6 @@ const confirmDeleteProject = async () => {
             <ExternalLink className="w-3.5 h-3.5 text-gold" />
             <span>Public Site</span>
           </button>
-          
           <button
             onClick={handleLogout}
             className="px-4 py-2 border border-gold/60 bg-gold/5 hover:bg-gold/15 text-gold text-xs tracking-wider uppercase flex items-center gap-1.5 transition-all duration-300 select-none cursor-pointer"
@@ -832,7 +684,6 @@ const confirmDeleteProject = async () => {
             <LogOut className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Logout</span>
           </button>
-
           <button
             onClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
             className="lg:hidden p-2 border border-white/10 bg-white/5 text-white hover:text-gold transition-colors duration-300"
@@ -843,16 +694,10 @@ const confirmDeleteProject = async () => {
         </div>
       </header>
 
-      {/* DASHBOARD CONTENT BODY WRAPPER */}
       <div className="flex-1 flex flex-col lg:flex-row relative z-10">
-        
-        {/* SIDE NAV BAR */}
         <AdminSidebar
           activeTab={activeTab}
-          setActiveTab={(tab) => {
-            setActiveTab(tab);
-            setIsMobileSidebarOpen(false);
-          }}
+          setActiveTab={(tab) => { setActiveTab(tab); setIsMobileSidebarOpen(false); }}
           isMobileSidebarOpen={isMobileSidebarOpen}
           setIsMobileSidebarOpen={setIsMobileSidebarOpen}
           lang={lang}
@@ -863,10 +708,7 @@ const confirmDeleteProject = async () => {
           tags={tags}
         />
 
-        {/* MAIN PANEL CONTENT SPACE */}
         <main className="flex-1 p-6 md:p-12 overflow-y-auto w-full lg:max-w-[calc(100vw-256px)] select-text relative">
-          
-          {/* Render active workspace panel tab */}
           {activeTab === 'dashboard' && (
             <AdminDashboard
               totalProjectsCount={totalProjectsCount}
@@ -877,24 +719,17 @@ const confirmDeleteProject = async () => {
               setActiveTab={setActiveTab}
             />
           )}
-
           {activeTab === 'add_project' && (
             <AdminProjectForm
               editingProjectId={editingProjectId}
-              formName={formName}
-              setFormName={setFormName}
-              formCategory={formCategory}
-              setFormCategory={setFormCategory}
-              formFeatured={formFeatured}
-              setFormFeatured={setFormFeatured}
+              formName={formName} setFormName={setFormName}
+              formCategory={formCategory} setFormCategory={setFormCategory}
+              formFeatured={formFeatured} setFormFeatured={setFormFeatured}
               tags={tags}
-              selectedTagIds={selectedTagIds}
-              setSelectedTagIds={setSelectedTagIds}
-              formDescription={formDescription}
-              setFormDescription={setFormDescription}
+              selectedTagIds={selectedTagIds} setSelectedTagIds={setSelectedTagIds}
+              formDescription={formDescription} setFormDescription={setFormDescription}
               isProcessingImages={isProcessingImages}
-              formImages={formImages}
-              removeFormImage={removeFormImage}
+              formImages={formImages} removeFormImage={removeFormImage}
               formErrors={formErrors}
               fileInputRef={fileInputRef}
               handleImageUpload={handleImageUpload}
@@ -903,111 +738,72 @@ const confirmDeleteProject = async () => {
               setActiveTab={setActiveTab}
             />
           )}
-
           {activeTab === 'manage_projects' && (
             <AdminProjectsTable
               processedProjectsList={processedProjectsList}
-              searchQuery={searchQuery}
-              setSearchQuery={setSearchQuery}
-              filterCategory={filterCategory}
-              setFilterCategory={setFilterCategory}
+              searchQuery={searchQuery} setSearchQuery={setSearchQuery}
+              filterCategory={filterCategory} setFilterCategory={setFilterCategory}
               deletingProjectId={deletingProjectId}
-              projectTags={projectTags}
-              tags={tags}
+              projectTags={projectTags} tags={tags}
               toggleProjectFeatured={toggleProjectFeatured}
               handleEditTrigger={handleEditTrigger}
               handleDeleteTrigger={handleDeleteTrigger}
             />
           )}
-
           {activeTab === 'tags' && (
             <AdminTagsManager
               editingTagId={editingTagId}
-              formTagName={formTagName}
-              setFormTagName={setFormTagName}
-              formTagNameAr={formTagNameAr}
-              setFormTagNameAr={setFormTagNameAr}
-              formTagColor={formTagColor}
-              setFormTagColor={setFormTagColor}
+              formTagName={formTagName} setFormTagName={setFormTagName}
+              formTagNameAr={formTagNameAr} setFormTagNameAr={setFormTagNameAr}
+              formTagColor={formTagColor} setFormTagColor={setFormTagColor}
               resetTagForm={resetTagForm}
               handleTagSubmit={handleTagSubmit}
-              tags={tags}
-              projectTags={projectTags}
+              tags={tags} projectTags={projectTags}
               handleTagEditTrigger={handleTagEditTrigger}
               handleTagDeleteCall={handleTagDeleteCall}
             />
           )}
-
           {activeTab === 'contact_settings' && (
             <AdminContactForm
               handleContactSubmit={handleContactSubmit}
-              contactWhatsapp={contactWhatsapp}
-              setContactWhatsapp={setContactWhatsapp}
-              contactInstagram={contactInstagram}
-              setContactInstagram={setContactInstagram}
-              contactEmail={contactEmail}
-              setContactEmail={setContactEmail}
-              contactPhone={contactPhone}
-              setContactPhone={setContactPhone}
-              contactLocation={contactLocation}
-              setContactLocation={setContactLocation}
-              contactLocationAr={contactLocationAr}
-              setContactLocationAr={setContactLocationAr}
-              contactTagline={contactTagline}
-              setContactTagline={setContactTagline}
-              contactTaglineAr={contactTaglineAr}
-              setContactTaglineAr={setContactTaglineAr}
-              contactStudioDesc={contactStudioDesc}
-              setContactStudioDesc={setContactStudioDesc}
-              contactStudioDescAr={contactStudioDescAr}
-              setContactStudioDescAr={setContactStudioDescAr}
+              contactWhatsapp={contactWhatsapp} setContactWhatsapp={setContactWhatsapp}
+              contactInstagram={contactInstagram} setContactInstagram={setContactInstagram}
+              contactEmail={contactEmail} setContactEmail={setContactEmail}
+              contactPhone={contactPhone} setContactPhone={setContactPhone}
+              contactLocation={contactLocation} setContactLocation={setContactLocation}
+              contactLocationAr={contactLocationAr} setContactLocationAr={setContactLocationAr}
+              contactTagline={contactTagline} setContactTagline={setContactTagline}
+              contactTaglineAr={contactTaglineAr} setContactTaglineAr={setContactTaglineAr}
+              contactStudioDesc={contactStudioDesc} setContactStudioDesc={setContactStudioDesc}
+              contactStudioDescAr={contactStudioDescAr} setContactStudioDescAr={setContactStudioDescAr}
             />
           )}
-
           {activeTab === 'site_content' && (
             <AdminCmsEditor
-              cmsSection={cmsSection}
-              setCmsSection={setCmsSection}
-              isPreviewEnabled={isPreviewEnabled}
-              setIsPreviewEnabled={setIsPreviewEnabled}
-              editingContent={editingContent}
-              setEditingContent={setEditingContent}
+              cmsSection={cmsSection} setCmsSection={setCmsSection}
+              isPreviewEnabled={isPreviewEnabled} setIsPreviewEnabled={setIsPreviewEnabled}
+              editingContent={editingContent} setEditingContent={setEditingContent}
               handleCmsImageUpload={handleCmsImageUpload}
               handleSaveCmsSection={handleSaveCmsSection}
-              services={services}
-              testimonials={testimonials}
-              
-              srvTitleEn={srvTitleEn}
-              setSrvTitleEn={setSrvTitleEn}
-              srvTitleAr={srvTitleAr}
-              setSrvTitleAr={setSrvTitleAr}
-              srvDescEn={srvDescEn}
-              setSrvDescEn={setSrvDescEn}
-              srvDescAr={srvDescAr}
-              setSrvDescAr={setSrvDescAr}
-              srvIcon={srvIcon}
-              setSrvIcon={setSrvIcon}
-              srvActive={srvActive}
-              setSrvActive={setSrvActive}
+              services={services} testimonials={testimonials}
+              srvTitleEn={srvTitleEn} setSrvTitleEn={setSrvTitleEn}
+              srvTitleAr={srvTitleAr} setSrvTitleAr={setSrvTitleAr}
+              srvDescEn={srvDescEn} setSrvDescEn={setSrvDescEn}
+              srvDescAr={srvDescAr} setSrvDescAr={setSrvDescAr}
+              srvIcon={srvIcon} setSrvIcon={setSrvIcon}
+              srvActive={srvActive} setSrvActive={setSrvActive}
               editingServiceId={editingServiceId}
               handleCancelServiceEdit={handleCancelServiceEdit}
               handleSaveService={handleSaveService}
               handleMoveService={handleMoveService}
               handleEditServiceTrigger={handleEditServiceTrigger}
               handleDeleteService={handleDeleteService}
-
-              tstClientEn={tstClientEn}
-              setTstClientEn={setTstClientEn}
-              tstClientAr={tstClientAr}
-              setTstClientAr={setTstClientAr}
-              tstTextEn={tstTextEn}
-              setTstTextEn={setTstTextEn}
-              tstTextAr={tstTextAr}
-              setTstTextAr={setTstTextAr}
-              tstRating={tstRating}
-              setTstRating={setTstRating}
-              tstActive={tstActive}
-              setTstActive={setTstActive}
+              tstClientEn={tstClientEn} setTstClientEn={setTstClientEn}
+              tstClientAr={tstClientAr} setTstClientAr={setTstClientAr}
+              tstTextEn={tstTextEn} setTstTextEn={setTstTextEn}
+              tstTextAr={tstTextAr} setTstTextAr={setTstTextAr}
+              tstRating={tstRating} setTstRating={setTstRating}
+              tstActive={tstActive} setTstActive={setTstActive}
               editingTestimonialId={editingTestimonialId}
               handleCancelTestimonialEdit={handleCancelTestimonialEdit}
               handleSaveTestimonial={handleSaveTestimonial}
@@ -1016,20 +812,15 @@ const confirmDeleteProject = async () => {
               handleDeleteTestimonial={handleDeleteTestimonial}
             />
           )}
-
         </main>
       </div>
 
-      {/* DOUBLE CONFIRMATION POPUP */}
       <AdminDeleteModal
         projectToDelete={projectToDelete}
         setProjectToDelete={setProjectToDelete}
         confirmDeleteProject={confirmDeleteProject}
       />
-
-      {/* Global Toasts rendering */}
       <AdminToast toasts={toasts} />
-
     </div>
   );
 }
