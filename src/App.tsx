@@ -344,44 +344,33 @@ export default function App() {
     loadAllData();
   }, []);
 
-  // Reactive CMS state modifiers
-  const handleUpdateSiteContent = (newContent: SiteContent[]) => {
-    // Admin save action: clears cache loaded timestamp metadata immediately so refresh next visitor sees instantly
-    localStorage.removeItem('hazar_site_content_loaded_at');
-    localStorage.setItem('hazar_site_content', JSON.stringify(newContent));
-    setSiteContent([...newContent]);
-  };
-
-  const handleUpdateServices = (newServices: ServiceCMS[]) => {
-    localStorage.setItem('hazar_services_list', JSON.stringify(newServices));
+const handleUpdateServices = (newServices: ServiceCMS[]) => {
     setServices([...newServices]);
   };
 
-  const handleUpdateTestimonials = (newTestimonials: TestimonialCMS[]) => {
-    localStorage.setItem('hazar_testimonials_list', JSON.stringify(newTestimonials));
+const handleUpdateTestimonials = (newTestimonials: TestimonialCMS[]) => {
     setTestimonials([...newTestimonials]);
   };
 
-  // Reactive state updaters
-  const handleUpdateProjects = (newProjects: any[]) => {
-    localStorage.setItem('hazar_projects', JSON.stringify(newProjects));
+const handleUpdateProjects = (newProjects: any[]) => {
     setProjects([...newProjects]);
   };
 
-  const handleUpdateTags = (newTags: Tag[]) => {
-    localStorage.setItem('hazar_tags', JSON.stringify(newTags));
+const handleUpdateTags = (newTags: Tag[]) => {
     setTags([...newTags]);
   };
 
-  const handleUpdateProjectTags = (newProjTags: ProjectTag[]) => {
-    localStorage.setItem('hazar_project_tags', JSON.stringify(newProjTags));
+const handleUpdateProjectTags = (newProjTags: ProjectTag[]) => {
     setProjectTags([...newProjTags]);
   };
 
-  const handleUpdateContactSettings = (newSettings: ContactSettings) => {
+const handleUpdateContactSettings = (newSettings: ContactSettings) => {
     const updatedSettings = { ...newSettings, updatedAt: new Date().toISOString() };
-    localStorage.setItem('hazar_contact_settings', JSON.stringify(updatedSettings));
     setContactSettings(updatedSettings);
+  };
+
+const handleUpdateSiteContent = (newContent: SiteContent[]) => {
+    setSiteContent([...newContent]);
   };
 
   // ── SUPABASE REALTIME SYNC ──
