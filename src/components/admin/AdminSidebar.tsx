@@ -35,7 +35,12 @@ export default function AdminSidebar({
 }: AdminSidebarProps) {
   return (
     <aside 
-      className={`fixed lg:sticky top-[73px] h-[calc(100vh-73px)] z-30 lg:z-10 w-64 glass-panel border-r border-white/10 flex flex-col justify-between p-6 transition-transform duration-500 transform lg:translate-x-0 ${
+      className={`fixed lg:sticky top-[73px] h-[calc(100vh-73px)] z-30 lg:z-10 w-64 
+      bg-slate-900/30 backdrop-blur-2xl 
+      border-r border-white/10 
+      shadow-2xl
+      flex flex-col justify-between p-6 
+      transition-transform duration-500 transform lg:translate-x-0 ${
         isMobileSidebarOpen 
           ? 'translate-x-0' 
           : lang === 'ar' ? 'translate-x-64 lg:translate-x-0' : '-translate-x-64 lg:translate-x-0'
@@ -145,7 +150,7 @@ export default function AdminSidebar({
         </nav>
       </div>
 
-      <div className="glass-panel p-4 border border-white/5 text-[10px] font-mono tracking-wide text-white/40 space-y-1 select-none">
+      <div className="bg-slate-900/40 backdrop-blur-xl p-4 border border-white/5 text-[10px] font-mono tracking-wide text-white/40 space-y-1 select-none rounded-md">
         <p className="text-gold font-semibold uppercase mb-1">System Info</p>
         <p>Database: Unified Storage</p>
         <p>Role: Atelier Director</p>
