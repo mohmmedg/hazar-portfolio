@@ -17,7 +17,7 @@ export default function CustomCursor() {
   const springConfig = { damping: 30, stiffness: 350, mass: 0.5 };
   const cursorXSpring = useSpring(cursorX, springConfig);
   const cursorYSpring = useSpring(cursorY, springConfig);
-
+const [isVisible, setIsVisible] = useState(true);
   useEffect(() => {
     // Disable on touch screens/mobile
     const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
@@ -29,7 +29,6 @@ export default function CustomCursor() {
     const moveCursor = (e: MouseEvent) => {
       cursorX.set(e.clientX);
       cursorY.set(e.clientY);
-      if (!isVisible) setIsVisible(true);
     };
 
     const handleMouseLeave = () => {
