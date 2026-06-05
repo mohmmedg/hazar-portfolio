@@ -2,24 +2,21 @@
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
-
 import { useEffect, useState } from 'react';
 import { motion, useMotionValue, useSpring } from 'motion/react';
 
 export default function CustomCursor() {
   const [isVisible, setIsVisible] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
-  
-  // Custom springs for ultra-smooth responsiveness
+
   const cursorX = useMotionValue(-100);
   const cursorY = useMotionValue(-100);
-  
+
   const springConfig = { damping: 30, stiffness: 350, mass: 0.5 };
   const cursorXSpring = useSpring(cursorX, springConfig);
   const cursorYSpring = useSpring(cursorY, springConfig);
-const [isVisible, setIsVisible] = useState(true);
+
   useEffect(() => {
-    // Disable on touch screens/mobile
     const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
     if (isTouchDevice) {
       setIsVisible(false);
@@ -31,15 +28,9 @@ const [isVisible, setIsVisible] = useState(true);
       cursorY.set(e.clientY);
     };
 
-    const handleMouseLeave = () => {
-      setIsVisible(false);
-    };
+    const handleMouseLeave = () => setIsVisible(false);
+    const handleMouseEnter = () => setIsVisible(true);
 
-    const handleMouseEnter = () => {
-      setIsVisible(true);
-    };
-
-    // Detect clickable hover elements
     const handleMouseOver = (e: MouseEvent) => {
       const target = e.target as HTMLElement | null;
       if (
@@ -69,13 +60,12 @@ const [isVisible, setIsVisible] = useState(true);
       document.removeEventListener('mouseenter', handleMouseEnter);
       window.removeEventListener('mouseover', handleMouseOver);
     };
-  }, [cursorX, cursorY, isVisible]);
+  }, [cursorX, cursorY]);
 
   if (!isVisible) return null;
 
   return (
     <>
-      {/* Outer Ring with Spring Physics */}
       <motion.div
         className="fixed top-0 left-0 w-8 h-8 rounded-full border border-gold/60 pointer-events-none z-[9999] mix-blend-screen"
         style={{
@@ -92,7 +82,6 @@ const [isVisible, setIsVisible] = useState(true);
         }}
         transition={{ type: 'tween', ease: 'backOut', duration: 0.2 }}
       />
-      {/* Inner Pin-point Dot */}
       <motion.div
         className="fixed top-0 left-0 w-1.5 h-1.5 bg-gold rounded-full pointer-events-none z-[10000]"
         style={{
@@ -101,9 +90,7 @@ const [isVisible, setIsVisible] = useState(true);
           translateX: '-50%',
           translateY: '-50%',
         }}
-        animate={{
-          scale: isHovering ? 0.6 : 1.0,
-        }}
+        animate={{ scale: isHovering ? 0.6 : 1.0 }}
         transition={{ duration: 0.1 }}
       />
     </>
