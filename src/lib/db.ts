@@ -2,18 +2,13 @@ import { supabase, isSupabaseEnabled } from './supabase';
 
 // ── PROJECTS ──────────────────────────────────────
 export async function fetchProjects() {
-  if (!isSupabaseEnabled) {
-    const raw = localStorage.getItem('hazar_projects');
-    return raw ? JSON.parse(raw) : [];
-  }
+  if (!isSupabaseEnabled) return [];
   const { data, error } = await supabase!
     .from('projects')
     .select(`*, project_images(image_url, display_order)`)
     .order('featured', { ascending: false })
     .order('created_at', { ascending: false });
   if (error) throw error;
-  
-  // Transform relational schema back to flat layout expected by the frontend UI
   return (data || []).map((p: any) => ({
     id: p.id,
     name: p.name,
@@ -28,16 +23,8 @@ export async function fetchProjects() {
 }
 
 export async function saveProject(project: any) {
-  if (!isSupabaseEnabled) {
-    const all = JSON.parse(localStorage.getItem('hazar_projects') || '[]');
-    const exists = all.findIndex((p: any) => p.id === project.id);
-    if (exists >= 0) all[exists] = project;
-    else all.unshift(project);
-    localStorage.setItem('hazar_projects', JSON.stringify(all));
-    return project;
-  }
+  if (!isSupabaseEnabled) return project;
 
-  // 1. Prepare project record for main projects table
   const projectRecord = {
     id: project.id,
     name: project.name,
@@ -50,10 +37,8 @@ export async function saveProject(project: any) {
   const { error: projectError } = await supabase!
     .from('projects')
     .upsert(projectRecord);
-  
   if (projectError) throw projectError;
 
-  // 2. Clear old mappings and synchronize modern array entries to junction
   await supabase!
     .from('project_images')
     .delete()
@@ -65,11 +50,9 @@ export async function saveProject(project: any) {
       image_url: url,
       display_order: index
     }));
-
     const { error: imagesError } = await supabase!
       .from('project_images')
       .insert(imagesToInsert);
-    
     if (imagesError) throw imagesError;
   }
 
@@ -77,12 +60,7 @@ export async function saveProject(project: any) {
 }
 
 export async function deleteProject(id: string) {
-  if (!isSupabaseEnabled) {
-    const all = JSON.parse(localStorage.getItem('hazar_projects') || '[]');
-    const updated = all.filter((p: any) => p.id !== id);
-    localStorage.setItem('hazar_projects', JSON.stringify(updated));
-    return;
-  }
+  if (!isSupabaseEnabled) return;
   const { error } = await supabase!
     .from('projects')
     .delete()
@@ -92,10 +70,7 @@ export async function deleteProject(id: string) {
 
 // ── SITE CONTENT ──────────────────────────────────
 export async function fetchSiteContent() {
-  if (!isSupabaseEnabled) {
-    const raw = localStorage.getItem('hazar_site_content');
-    return raw ? JSON.parse(raw) : null;
-  }
+  if (!isSupabaseEnabled) return null;
   const { data, error } = await supabase!
     .from('site_content')
     .select('*')
@@ -105,11 +80,7 @@ export async function fetchSiteContent() {
 }
 
 export async function saveSiteContent(content: any[]) {
-  if (!isSupabaseEnabled) {
-    localStorage.setItem('hazar_site_content', JSON.stringify(content));
-    return;
-  }
-  
+  if (!isSupabaseEnabled) return;
   const payload = content.map(item => ({
     id: item.id,
     section: item.section,
@@ -119,7 +90,6 @@ export async function saveSiteContent(content: any[]) {
     content_type: item.content_type,
     label: item.label
   }));
-
   const { error } = await supabase!
     .from('site_content')
     .upsert(payload);
@@ -128,16 +98,12 @@ export async function saveSiteContent(content: any[]) {
 
 // ── CONTACT SETTINGS ──────────────────────────────
 export async function fetchContactSettings() {
-  if (!isSupabaseEnabled) {
-    const raw = localStorage.getItem('hazar_contact_settings');
-    return raw ? JSON.parse(raw) : null;
-  }
+  if (!isSupabaseEnabled) return null;
   const { data, error } = await supabase!
     .from('contact_settings')
     .select('key, value');
   if (error) throw error;
   if (!data || data.length === 0) return null;
-
   return data.reduce((acc: any, row: any) => {
     acc[row.key] = row.value;
     return acc;
@@ -145,10 +111,7 @@ export async function fetchContactSettings() {
 }
 
 export async function saveContactSettings(settings: any) {
-  if (!isSupabaseEnabled) {
-    localStorage.setItem('hazar_contact_settings', JSON.stringify(settings));
-    return;
-  }
+  if (!isSupabaseEnabled) return;
   const rows = Object.entries(settings).map(([key, value]) => ({
     key,
     value: typeof value === 'string' ? value : JSON.stringify(value)
@@ -161,10 +124,7 @@ export async function saveContactSettings(settings: any) {
 
 // ── SERVICES ──────────────────────────────────────
 export async function fetchServices() {
-  if (!isSupabaseEnabled) {
-    const raw = localStorage.getItem('hazar_services_list');
-    return raw ? JSON.parse(raw) : [];
-  }
+  if (!isSupabaseEnabled) return [];
   const { data, error } = await supabase!
     .from('services')
     .select('*')
@@ -174,22 +134,25 @@ export async function fetchServices() {
 }
 
 export async function saveServices(services: any[]) {
-  if (!isSupabaseEnabled) {
-    localStorage.setItem('hazar_services_list', JSON.stringify(services));
-    return;
-  }
+  if (!isSupabaseEnabled) return;
   const { error } = await supabase!
     .from('services')
     .upsert(services);
   if (error) throw error;
 }
 
+export async function deleteService(id: string) {
+  if (!isSupabaseEnabled) return;
+  const { error } = await supabase!
+    .from('services')
+    .delete()
+    .eq('id', id);
+  if (error) throw error;
+}
+
 // ── TESTIMONIALS ──────────────────────────────────
 export async function fetchTestimonials() {
-  if (!isSupabaseEnabled) {
-    const raw = localStorage.getItem('hazar_testimonials_list');
-    return raw ? JSON.parse(raw) : [];
-  }
+  if (!isSupabaseEnabled) return [];
   const { data, error } = await supabase!
     .from('testimonials')
     .select('*')
@@ -199,21 +162,24 @@ export async function fetchTestimonials() {
 }
 
 export async function saveTestimonials(testimonials: any[]) {
-  if (!isSupabaseEnabled) {
-    localStorage.setItem('hazar_testimonials_list', JSON.stringify(testimonials));
-    return;
-  }
+  if (!isSupabaseEnabled) return;
   const { error } = await supabase!
     .from('testimonials')
     .upsert(testimonials);
   if (error) throw error;
 }
 
+export async function deleteTestimonial(id: string) {
+  if (!isSupabaseEnabled) return;
+  const { error } = await supabase!
+    .from('testimonials')
+    .delete()
+    .eq('id', id);
+  if (error) throw error;
+}
+
 // ── IMAGE UPLOAD ───────────────────────────────────
-export async function uploadImage(
-  file: File,
-  projectId: string
-): Promise<string> {
+export async function uploadImage(file: File, projectId: string): Promise<string> {
   if (!isSupabaseEnabled) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -236,10 +202,7 @@ export async function uploadImage(
 
 // ── TAGS ──────────────────────────────────────────
 export async function fetchTags() {
-  if (!isSupabaseEnabled) {
-    const raw = localStorage.getItem('hazar_tags');
-    return raw ? JSON.parse(raw) : [];
-  }
+  if (!isSupabaseEnabled) return [];
   const { data, error } = await supabase!
     .from('tags')
     .select('*')
@@ -249,22 +212,23 @@ export async function fetchTags() {
 }
 
 export async function saveTags(tags: any[]) {
-  if (!isSupabaseEnabled) {
-    localStorage.setItem('hazar_tags', JSON.stringify(tags));
-    return;
-  }
+  if (!isSupabaseEnabled) return;
   const { error } = await supabase!
     .from('tags')
     .upsert(tags);
   if (error) throw error;
 }
 
+export async function deleteTag(id: string) {
+  if (!isSupabaseEnabled) return;
+  await supabase!.from('project_tags').delete().eq('tag_id', id);
+  const { error } = await supabase!.from('tags').delete().eq('id', id);
+  if (error) throw error;
+}
+
 // ── PROJECT TAGS ──────────────────────────────────
 export async function fetchProjectTags() {
-  if (!isSupabaseEnabled) {
-    const raw = localStorage.getItem('hazar_project_tags');
-    return raw ? JSON.parse(raw) : [];
-  }
+  if (!isSupabaseEnabled) return [];
   const { data, error } = await supabase!
     .from('project_tags')
     .select('*');
@@ -273,17 +237,11 @@ export async function fetchProjectTags() {
 }
 
 export async function saveProjectTags(projectTags: any[]) {
-  if (!isSupabaseEnabled) {
-    localStorage.setItem('hazar_project_tags', JSON.stringify(projectTags));
-    return;
-  }
-  
-  // Clear existing data first
+  if (!isSupabaseEnabled) return;
   await supabase!
     .from('project_tags')
     .delete()
     .neq('project_id', '');
-    
   if (projectTags.length > 0) {
     const { error } = await supabase!
       .from('project_tags')
