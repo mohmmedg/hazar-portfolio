@@ -658,7 +658,7 @@ export default function AdminPanel({
       <header className="sticky top-0 z-40 w-full glass-panel-m border-b border-white/10 px-6 py-4 md:px-12 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 flex items-center justify-center">
-            <Logo variant="emblem" className="w-10 h-10 text-gold" />
+            <Logo variant="emblem" className="w-10 h-10 text-gold" imageUrl={siteContent?.find(i => i.key === 'brand_logo_image')?.value_en || undefined} />
           </div>
           <div className="flex flex-col">
             <h1 className="font-serif text-sm tracking-widest text-gold uppercase font-bold leading-none">

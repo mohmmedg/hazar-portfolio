@@ -17,8 +17,9 @@ interface NavbarProps {
   siteContent?: SiteContent[];
 }
 
-export default function Navbar({ lang, setLang, t, settings }: NavbarProps) {
+export default function Navbar({ lang, setLang, t, settings, siteContent }: NavbarProps) {
   const cleanWhatsApp = settings?.whatsapp_number?.replace(/[^0-9]/g, '') || '963955111222';
+  const logoImageUrl = siteContent?.find(i => i.key === 'brand_logo_image')?.value_en || '';
   const whatsappLink = `https://wa.me/${cleanWhatsApp}`;
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -86,7 +87,7 @@ export default function Navbar({ lang, setLang, t, settings }: NavbarProps) {
             className="flex items-center gap-3 group select-none text-white hover:text-gold transition-colors duration-300"
           >
             <div className="w-12 h-12 flex items-center justify-center transition-transform duration-500 group-hover:scale-105">
-              <Logo variant="emblem" className="w-12 h-12 text-gold" />
+              <Logo variant="emblem" className="w-12 h-12 text-gold" imageUrl={logoImageUrl || undefined} />
             </div>
             <div className="flex flex-col">
               <span className="font-serif tracking-[0.25em] text-sm md:text-base font-bold leading-none">
