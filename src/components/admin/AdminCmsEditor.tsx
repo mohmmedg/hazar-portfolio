@@ -11,6 +11,8 @@ interface AdminCmsEditorProps {
   setEditingContent: React.Dispatch<React.SetStateAction<any[]>>;
   handleCmsImageUpload: (e: React.ChangeEvent<HTMLInputElement>, key: string) => void;
   handleSaveCmsSection: (e: React.FormEvent) => void;
+  handleSaveLogo: () => Promise<void>;
+  triggerToast: (type: 'success' | 'error', message: string) => void;
   services: any[];
   testimonials: any[];
   srvTitleEn: string; setSrvTitleEn: (val: string) => void;
@@ -82,6 +84,7 @@ export default function AdminCmsEditor({
   isPreviewEnabled, setIsPreviewEnabled,
   editingContent, setEditingContent,
   handleCmsImageUpload, handleSaveCmsSection,
+  handleSaveLogo, triggerToast,
   services, testimonials,
   srvTitleEn, setSrvTitleEn, srvTitleAr, setSrvTitleAr,
   srvDescEn, setSrvDescEn, srvDescAr, setSrvDescAr,
@@ -97,6 +100,8 @@ export default function AdminCmsEditor({
 
   const getVal = (key: string, lang: 'en' | 'ar' = 'en') =>
     editingContent.find(i => i.key === key)?.[lang === 'en' ? 'value_en' : 'value_ar'] || '';
+
+  const [isSavingLogo, setIsSavingLogo] = React.useState(false);
 
   const filteredItems = editingContent.filter(item =>
     SECTION_KEY_MAPPING[cmsSection]?.includes(item.key)
@@ -163,6 +168,14 @@ export default function AdminCmsEditor({
               onChange={(e) => {
                 const file = e.target.files?.[0];
                 if (!file) return;
+                // Supabase/PostgREST upserts of very large text payloads fail
+                // silently (no error returned), which is exactly what made
+                // this feature look "broken" — guard against that here.
+                const MAX_LOGO_SIZE = 2 * 1024 * 1024; // 2MB
+                if (file.size > MAX_LOGO_SIZE) {
+                  triggerToast('error', `Image too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Please use an image under 2MB so the save doesn't silently fail.`);
+                  return;
+                }
                 const reader = new FileReader();
                 reader.onloadend = () => {
                   const base64 = reader.result as string;
@@ -206,17 +219,20 @@ export default function AdminCmsEditor({
             {getVal(LOGO_KEY) && (
               <button
                 type="button"
-                onClick={() => {
-                  const logoItem = editingContent.find(i => i.key === LOGO_KEY);
-                  if (logoItem) {
-                    import('../../lib/db').then(({ saveSiteContent }) => {
-                      saveSiteContent(editingContent);
-                    });
+                disabled={isSavingLogo}
+                onClick={async () => {
+                  setIsSavingLogo(true);
+                  try {
+                    await handleSaveLogo();
+                  } catch {
+                    // error toast already shown by handleSaveLogo
+                  } finally {
+                    setIsSavingLogo(false);
                   }
                 }}
-                className="px-5 py-2 bg-gradient-to-r from-gold to-[#8A6D25] text-navy-dark text-xs uppercase font-extrabold tracking-widest"
+                className="px-5 py-2 bg-gradient-to-r from-gold to-[#8A6D25] text-navy-dark text-xs uppercase font-extrabold tracking-widest disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Save Logo ✓
+                {isSavingLogo ? 'Saving...' : 'Save Logo ✓'}
               </button>
             )}
           </div>

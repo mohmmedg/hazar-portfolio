@@ -228,6 +228,22 @@ export default function AdminPanel({
     triggerToast('success', `Saved [${cmsSection.toUpperCase()}] content successfully ✓`);
   };
 
+  // The Brand Logo save was previously fire-and-forget with zero success/error
+  // feedback and never synced the global `siteContent` state, so a failed
+  // save (RLS rejection, oversized base64 payload, network error, etc.)
+  // looked exactly like a successful one — nothing happened on screen.
+  const handleSaveLogo = async () => {
+    setSiteContent(editingContent);
+    try {
+      await saveSiteContent(editingContent);
+      triggerToast('success', 'Logo saved successfully ✓');
+    } catch (err) {
+      console.error('Failed to save logo:', err);
+      triggerToast('error', 'Failed to save logo. The image may be too large, or your account may lack admin permissions.');
+      throw err;
+    }
+  };
+
   // --- SERVICES CRUD ---
   const handleEditServiceTrigger = (srv: ServiceCMS) => {
     setEditingServiceId(srv.id);
@@ -785,6 +801,8 @@ export default function AdminPanel({
               editingContent={editingContent} setEditingContent={setEditingContent}
               handleCmsImageUpload={handleCmsImageUpload}
               handleSaveCmsSection={handleSaveCmsSection}
+              handleSaveLogo={handleSaveLogo}
+              triggerToast={triggerToast}
               services={services} testimonials={testimonials}
               srvTitleEn={srvTitleEn} setSrvTitleEn={setSrvTitleEn}
               srvTitleAr={srvTitleAr} setSrvTitleAr={setSrvTitleAr}
