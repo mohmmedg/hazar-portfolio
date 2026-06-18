@@ -86,7 +86,7 @@ export default function Navbar({ lang, setLang, t, settings, siteContent }: Navb
             onClick={(e) => handleNavClick(e, '#home')}
             className="flex items-center gap-3 group select-none text-white hover:text-gold transition-colors duration-300"
           >
-            <div className="w-12 h-12 flex items-center justify-center transition-transform duration-500 group-hover:scale-105">
+            <div className="w-16 h-16 flex items-center justify-center transition-transform duration-500 group-hover:scale-105">
               <Logo variant="emblem" className="w-12 h-12 text-gold" imageUrl={logoImageUrl || undefined} />
             </div>
             <div className="flex flex-col">
