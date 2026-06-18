@@ -9,22 +9,11 @@
      viewBox="0 0 1100 1100"
      preserveAspectRatio="xMidYMid meet">
 
-  <defs>
-    <clipPath id="circular-clip">
-      <circle cx="590" cy="590" r="400" />
-    </clipPath>
-  </defs>
+  <rect x="90" y="90" width="1000" height="1000" fill="#04082B"/>
 
-  <!-- Dark blue (كحلي) circular background -->
-  <circle cx="590" cy="590" r="500" fill="#04082B"/>
+  <rect x="290" y="290" width="600" height="600" fill="white"/>
 
-  <!-- Content with circular clip -->
-  <g clip-path="url(#circular-clip)">
-
-    <!-- Dark blue background fill -->
-    <circle cx="590" cy="590" r="300" fill="white"/>
-
-    <!-- The main content - white text on dark blue background -->
+  <g>
     <g transform="translate(60.000000, 1000.500000) scale(0.100000,-0.100000)"
        fill="#04082B"
        stroke="none">
@@ -130,7 +119,7 @@
       -18 0 -31 11 -51 43 -10 15 -22 27 -27 27 -15 0 -12 -57 3 -63 6 -3 -4 -6 -22
       -6 -27 -1 -32 2 -23 11 16 16 16 120 0 136 -17 17 63 16 87 -2z m266 -2 c10
       -13 10 -20 0 -36 -9 -15 -9 -23 0 -34 14 -17 31 -9 27 14 -2 11 5 18 20 20 12
-      2 22 -1 22 -7 0 -6 -4 -11 -10 -11 -5 0 -14 -9 -20 -20 -8 -15 -7 -26 6 -45
+      2 -1 -1 22 -7 0 -6 -4 -11 -10 -11 -5 0 -14 -9 -20 -20 -8 -15 -7 -26 6 -45
       18 -27 5 -35 -16 -10 -12 14 -15 14 -30 0 -20 -18 -51 -20 -68 -3 -15 15 -16
       54 -2 63 6 3 10 21 10 39 0 18 3 36 7 39 12 12 40 7 54 -9z m319 1 c0 -8 -4
       -15 -10 -15 -5 0 -10 5 -10 11 0 6 -11 10 -22 7 -17 -2 -24 -11 -26 -32 -3 -27
@@ -209,7 +198,5 @@
       -81 65z"/>
     </g>
   </g>
-
- 
 
 </svg>
