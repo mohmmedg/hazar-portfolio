@@ -63,7 +63,7 @@ export default function Hero({ t, lang, settings, siteContent }: HeroProps) {
       {/* Main Content Pane */}
       <div className="relative z-10 max-w-4xl mx-auto flex flex-col items-center text-center">
         
-        {/* Monogram Badge */}
+        {/* Monogram Badge - أكبر حجم */}
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -73,8 +73,14 @@ export default function Hero({ t, lang, settings, siteContent }: HeroProps) {
           {/* Pulsing back flare */}
           <div className="absolute -inset-1.5 bg-gold/25 blur-md opacity-70 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
           
-          <div className="relative flex items-center justify-center w-24 h-24 border border-gold/40 bg-navy-dark/95 shadow-[0_0_40px_rgba(201,168,76,0.25)] rounded-full overflow-hidden">
-            <Logo variant="emblem" imageUrl={logoImageUrl} className="w-full h-full object-cover" />
+          {/* الحاوية أكبر - w-40 h-40 = 160px */}
+          <div className="relative flex items-center justify-center w-40 h-40 sm:w-48 sm:h-48 border border-gold/40 bg-navy-dark/95 shadow-[0_0_40px_rgba(201,168,76,0.25)] rounded-full overflow-hidden">
+            {/* اللوجو يملأ الحاوية مع توسيط وإزالة المساحة الفارغة */}
+            <Logo 
+              variant="emblem" 
+              imageUrl={logoImageUrl} 
+              className="w-[140%] h-[140%] object-cover object-center -ml-[20%]" 
+            />
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[112%] h-[112%] border border-gold/15 rounded-full pointer-events-none" />
           </div>
         </motion.div>
