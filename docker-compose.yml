@@ -1,0 +1,31 @@
+version: "3.8"
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        VITE_SUPABASE_URL: ${VITE_SUPABASE_URL}
+        VITE_SUPABASE_ANON_KEY: ${VITE_SUPABASE_ANON_KEY}
+        VITE_CONTACT_WHATSAPP: ${VITE_CONTACT_WHATSAPP}
+        VITE_CONTACT_EMAIL: ${VITE_CONTACT_EMAIL}
+        VITE_CONTACT_PHONE: ${VITE_CONTACT_PHONE}
+        VITE_CONTACT_INSTAGRAM: ${VITE_CONTACT_INSTAGRAM}
+    image: hazar-portfolio:latest
+    ports:
+      - "80:80"
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
