@@ -41,11 +41,12 @@ export default function Hero({ t, lang, settings, siteContent }: HeroProps) {
   return (
     <section
       id="home"
-      className="relative min-h-screen flex items-center justify-center p-6 overflow-hidden select-none bg-radial-[circle_at_center,_var(--color-navy-light)_0%,_var(--color-navy-dark)_80%]"
+      className="relative min-h-screen flex items-center justify-center p-6 overflow-hidden select-none"
+      style={{ backgroundColor: '#0a0e27' }}
     >
       {/* Background Decorative Ambient Flares */}
       <div className="absolute top-1/4 left-1/4 w-[400px] h-[400px] rounded-full bg-gold/10 blur-[130px] pointer-events-none ambient-bg-glow" />
-      <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] rounded-full bg-navy-light/40 blur-[150px] pointer-events-none" />
+      <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] rounded-full bg-white/5 blur-[150px] pointer-events-none" />
 
       {/* Grid Pattern Overlay to feel like architectural drafting paper */}
       <div 
@@ -63,7 +64,7 @@ export default function Hero({ t, lang, settings, siteContent }: HeroProps) {
       {/* Main Content Pane */}
       <div className="relative z-10 max-w-4xl mx-auto flex flex-col items-center text-center">
         
-        {/* Monogram Badge - أكبر حجم */}
+        {/* Monogram Badge */}
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -73,9 +74,7 @@ export default function Hero({ t, lang, settings, siteContent }: HeroProps) {
           {/* Pulsing back flare */}
           <div className="absolute -inset-1.5 bg-gold/25 blur-md opacity-70 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
           
-          {/* الحاوية أكبر - w-40 h-40 = 160px */}
-          <div className="relative flex items-center justify-center w-40 h-40 sm:w-48 sm:h-48 border border-gold/40 bg-navy-dark/95 shadow-[0_0_40px_rgba(201,168,76,0.25)] rounded-full overflow-hidden">
-            {/* اللوجو يملأ الحاوية مع توسيط وإزالة المساحة الفارغة */}
+          <div className="relative flex items-center justify-center w-40 h-40 sm:w-48 sm:h-48 border border-gold/40 bg-[#0a0e27] shadow-[0_0_40px_rgba(201,168,76,0.25)] rounded-full overflow-hidden">
             <Logo 
               variant="emblem" 
               imageUrl={logoImageUrl} 
