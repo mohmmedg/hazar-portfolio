@@ -74,7 +74,7 @@ export default function Hero({ t, lang, settings, siteContent }: HeroProps) {
           <div className="absolute -inset-1.5 bg-gold/25 blur-md opacity-70 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
           
           <div className="relative flex items-center justify-center p-3 w-24 h-24 border border-gold/40 bg-navy-dark/95 shadow-[0_0_40px_rgba(201,168,76,0.25)] rounded-full">
-            <Logo variant="emblem" className="w-16 h-16 text-gold"  />
+            <Logo variant="emblem" className="w-24 h-24 text-gold"  />
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[112%] h-[112%] border border-gold/15 rounded-full pointer-events-none" />
           </div>
         </motion.div>
