@@ -9,9 +9,8 @@
      viewBox="0 0 1100 1100"
      preserveAspectRatio="xMidYMid meet">
 
-  <rect x="90" y="90" width="1000" height="1000" fill="#04082B"/>
 
-  <rect x="290" y="290" width="600" height="600" fill="white"/>
+  <rect x="290" y="290" width="80" height="800" fill="white"/>
 
   <g>
     <g transform="translate(60.000000, 1000.500000) scale(0.100000,-0.100000)"
