@@ -10,7 +10,7 @@
      preserveAspectRatio="xMidYMid meet">
 
 
-  <rect x="290" y="290" width="400" height="400" fill="white"/>
+  <rect x="290" y="290" width="600" height="600" fill="white"/>
 
   <g>
     <g transform="translate(60.000000, 1000.500000) scale(0.100000,-0.100000)"
