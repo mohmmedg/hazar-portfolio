@@ -77,14 +77,12 @@ const SECTION_KEY_MAPPING: Record<string, string[]> = {
 };
 
 // ─── LOGO KEY ────────────────────────────────────────────────────────────────
-const LOGO_KEY = 'brand_logo_image';
 
 export default function AdminCmsEditor({
   cmsSection, setCmsSection,
   isPreviewEnabled, setIsPreviewEnabled,
   editingContent, setEditingContent,
   handleCmsImageUpload, handleSaveCmsSection,
-  handleSaveLogo, triggerToast,
   services, testimonials,
   srvTitleEn, setSrvTitleEn, srvTitleAr, setSrvTitleAr,
   srvDescEn, setSrvDescEn, srvDescAr, setSrvDescAr,
@@ -101,7 +99,6 @@ export default function AdminCmsEditor({
   const getVal = (key: string, lang: 'en' | 'ar' = 'en') =>
     editingContent.find(i => i.key === key)?.[lang === 'en' ? 'value_en' : 'value_ar'] || '';
 
-  const [isSavingLogo, setIsSavingLogo] = React.useState(false);
 
   const filteredItems = editingContent.filter(item =>
     SECTION_KEY_MAPPING[cmsSection]?.includes(item.key)
@@ -138,105 +135,6 @@ export default function AdminCmsEditor({
           {isPreviewEnabled ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
           <span>{isPreviewEnabled ? 'Hide Live Preview' : 'Show Live Preview'}</span>
         </button>
-      </div>
-
-      {/* ── LOGO UPLOAD PANEL ── */}
-      <div className="glass-panel p-6 border border-gold/20 space-y-4">
-        <div className="border-b border-white/10 pb-3">
-          <h3 className="text-xs font-mono tracking-[0.2em] text-gold uppercase font-bold">
-            [ BRAND LOGO IMAGE ]
-          </h3>
-          <p className="text-[10px] text-white/50 mt-1 uppercase">
-            Upload a custom logo image to replace the SVG logo across the entire site
-          </p>
-        </div>
-        <div className="flex items-start gap-6">
-          {/* Current logo preview */}
-          <div className="w-32 h-32 border border-white/10 bg-black/40 flex items-center justify-center shrink-0 overflow-hidden">
-            {getVal(LOGO_KEY) ? (
-              <img src={getVal(LOGO_KEY)} alt="Logo" className="w-full h-full object-contain p-2" />
-            ) : (
-              <span className="text-[10px] text-white/30 font-mono text-center px-2">SVG Logo<br/>(default)</span>
-            )}
-          </div>
-          <div className="space-y-3 flex-1">
-            <input
-              type="file"
-              accept="image/*"
-              id="upload_brand_logo"
-              className="hidden"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (!file) return;
-                // Supabase/PostgREST upserts of very large text payloads fail
-                // silently (no error returned), which is exactly what made
-                // this feature look "broken" — guard against that here.
-                const MAX_LOGO_SIZE = 2 * 1024 * 1024; // 2MB
-                if (file.size > MAX_LOGO_SIZE) {
-                  triggerToast('error', `Image too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Please use an image under 2MB so the save doesn't silently fail.`);
-                  return;
-                }
-                const reader = new FileReader();
-                reader.onloadend = () => {
-                  const base64 = reader.result as string;
-                  setEditingContent(prev => {
-                    const exists = prev.find(i => i.key === LOGO_KEY);
-                    if (exists) {
-                      return prev.map(i => i.key === LOGO_KEY ? { ...i, value_en: base64, value_ar: base64 } : i);
-                    }
-                    return [...prev, {
-                      id: 'sc_logo',
-                      section: 'global',
-                      key: LOGO_KEY,
-                      label: 'Brand Logo Image',
-                      value_en: base64,
-                      value_ar: base64,
-                      content_type: 'image'
-                    }];
-                  });
-                };
-                reader.readAsDataURL(file);
-              }}
-            />
-            <label
-              htmlFor="upload_brand_logo"
-              className="inline-flex items-center gap-2 font-mono text-[10px] border border-gold/40 px-4 py-2.5 bg-gold/5 text-gold hover:border-gold hover:bg-gold/10 transition-colors uppercase cursor-pointer select-none"
-            >
-              Upload Logo Image (PNG / SVG / WebP)
-            </label>
-            {getVal(LOGO_KEY) && (
-              <button
-                type="button"
-                onClick={() => setEditingContent(prev => prev.map(i => i.key === LOGO_KEY ? { ...i, value_en: '', value_ar: '' } : i))}
-                className="block text-[10px] text-red-400 hover:text-red-300 font-mono uppercase"
-              >
-                ✕ Remove custom logo (revert to SVG)
-              </button>
-            )}
-            <p className="text-[10px] text-white/35 italic">
-              Recommended: transparent background PNG, min 400×400px. After upload, click "Save" below.
-            </p>
-            {getVal(LOGO_KEY) && (
-              <button
-                type="button"
-                disabled={isSavingLogo}
-                onClick={async () => {
-                  setIsSavingLogo(true);
-                  try {
-                    await handleSaveLogo();
-                  } catch {
-                    // error toast already shown by handleSaveLogo
-                  } finally {
-                    setIsSavingLogo(false);
-                  }
-                }}
-                className="px-5 py-2 bg-gradient-to-r from-gold to-[#8A6D25] text-navy-dark text-xs uppercase font-extrabold tracking-widest disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isSavingLogo ? 'Saving...' : 'Save Logo ✓'}
-              </button>
-            )}
-          </div>
-        </div>
       </div>
 
       {/* ── MAIN GRID ── */}
