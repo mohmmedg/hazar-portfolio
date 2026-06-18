@@ -87,7 +87,7 @@ export default function Navbar({ lang, setLang, t, settings, siteContent }: Navb
             className="flex items-center gap-3 group select-none text-white hover:text-gold transition-colors duration-300"
           >
             <div className="w-16 h-16 flex items-center justify-center transition-transform duration-500 group-hover:scale-105">
-              <Logo variant="emblem" className="w-12 h-12 text-gold" imageUrl={logoImageUrl || undefined} />
+              <Logo variant="emblem" className="w-12 h-12 text-gold"  />
             </div>
             <div className="flex flex-col">
               <span className="font-serif tracking-[0.25em] text-sm md:text-base font-bold leading-none">
