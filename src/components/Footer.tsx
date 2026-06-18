@@ -48,7 +48,7 @@ export default function Footer({ t, lang, settings, siteContent }: FooterProps) 
             <Logo 
               variant="full" 
               imageUrl={logoImageUrl}
-              className="absolute w-[180%] h-[180%] object-cover object-center" 
+              className="absolute w-[140%] h-[140%] object-cover object-center  -ml-[10%]" 
               lang={lang}  
             />
           </div>
