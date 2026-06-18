@@ -8,22 +8,6 @@
      height="600"
      viewBox="0 0 1100 1100"
      preserveAspectRatio="xMidYMid meet">
-
-  <defs>
-    <clipPath id="circular-clip">
-      <circle cx="590" cy="590" r="400" />
-    </clipPath>
-  </defs>
-
-  <!-- Dark blue (كحلي) circular background -->
-  <circle cx="590" cy="590" r="500" fill="#04082B"/>
-
-  <!-- Content with circular clip -->
-  <g clip-path="url(#circular-clip)">
-
-    <!-- Dark blue background fill -->
-    <circle cx="590" cy="590" r="300" fill="white"/>
-
     <!-- The main content - white text on dark blue background -->
     <g transform="translate(60.000000, 1000.500000) scale(0.100000,-0.100000)"
        fill="#04082B"
