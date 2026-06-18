@@ -78,7 +78,7 @@ export default function Hero({ t, lang, settings, siteContent }: HeroProps) {
             <Logo 
               variant="emblem" 
               imageUrl={logoImageUrl} 
-              className="w-[140%] h-[140%] object-cover object-center -ml-[20%]" 
+              className="w-[110%] h-[110%] object-contain object-center" 
             />
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[112%] h-[112%] border border-gold/15 rounded-full pointer-events-none" />
           </div>
