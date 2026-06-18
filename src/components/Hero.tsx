@@ -69,7 +69,7 @@ export default function Hero({ t, lang, settings, siteContent }: HeroProps) {
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 1.2, ease: 'easeOut' }}
-className="relative mt-8 sm:mt-12 lg:mt-16 mb-8 group"
+className="relative mt-0 sm:mt-2 lg:mt-4 mb-8 group"
           >
           {/* Pulsing back flare */}
           <div className="absolute -inset-1.5 bg-gold/25 blur-md opacity-70 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
