@@ -44,15 +44,15 @@ export default function Footer({ t, lang, settings, siteContent }: FooterProps) 
           onClick={handleScrollToTop}
           className="flex flex-col items-center mt-8 mb-8 group select-none hover:scale-[1.02] transition-transform duration-300 clickable-cursor"
         >
-          <div className="relative w-48 h-48 flex items-center justify-center overflow-hidden">
+          <div className="relative w-48 h-48 flex items-center justify-center overflow-hidden rounded-full border border-gold/30 bg-[#0a0e27] shadow-[0_0_30px_rgba(201,168,76,0.2)]">
             <Logo 
               variant="full" 
               imageUrl={logoImageUrl}
-              className="absolute w-[140%] h-[140%] object-contain object-center hover:shadow-[0_0_30px_rgba(201,168,76,0.3)] transition-all duration-500" 
+              className="absolute w-[140%] h-[140%] object-contain object-center" 
               lang={lang}  
             />
           </div>
-          <span className="text-[10px] uppercase tracking-[0.2em] text-gold font-mono font-semibold" data-content-key="footer_tagline">
+          <span className="text-[10px] uppercase tracking-[0.2em] text-gold font-mono font-semibold mt-4" data-content-key="footer_tagline">
             {getContent(siteContent, 'footer_tagline', lang, 'Modern • Elegant • Unique')}
           </span>
         </a>
