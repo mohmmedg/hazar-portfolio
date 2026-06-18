@@ -77,8 +77,7 @@ className="relative mt-16 sm:mt-20 lg:mt-24 mb-8 group"          >
             <Logo 
               variant="emblem" 
               imageUrl={logoImageUrl} 
-              className="w-[140%] h-[140%] object-cover object-center  -ml-[10%]" 
-            />
+className="w-[140%] h-[140%] object-cover object-center -ml-[20%] -mt-6"            />
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[112%] h-[112%] border border-gold/15 rounded-full pointer-events-none" />
           </div>
         </motion.div>
