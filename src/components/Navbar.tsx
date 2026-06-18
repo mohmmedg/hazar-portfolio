@@ -90,7 +90,7 @@ export default function Navbar({ lang, setLang, t, settings, siteContent }: Navb
               <Logo 
                 variant="emblem" 
                 imageUrl={logoImageUrl}
-                className="absolute w-[140%] h-[140%] object-contain object-center" 
+                className="absolute w-full h-full object-cover object-center" 
               />
             </div>
             <div className="flex flex-col">
